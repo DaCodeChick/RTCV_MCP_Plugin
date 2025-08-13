@@ -1,4 +1,4 @@
-namespace MemoryVizualizer.UI
+namespace MemoryVisualizer.UI
 {
     partial class RealtimeBitmap
     {
@@ -17,7 +17,7 @@ namespace MemoryVizualizer.UI
             {
                 components.Dispose();
             }
-            bitmap.Dispose();
+            Bitmap.Dispose();
             base.Dispose(disposing);
         }
 
@@ -29,7 +29,7 @@ namespace MemoryVizualizer.UI
         /// </summary>
         private void InitializeComponent()
         {
-            this.disp = new MemoryVizualizer.UI.BetterPictureDisplayer();
+            this.disp = new BetterPictureDisplayer();
             ((System.ComponentModel.ISupportInitialize)(this.disp)).BeginInit();
             this.SuspendLayout();
             // 
@@ -57,6 +57,6 @@ namespace MemoryVizualizer.UI
 
         #endregion
 
-        private MemoryVizualizer.UI.BetterPictureDisplayer disp;
+        internal BetterPictureDisplayer disp;
     }
 }

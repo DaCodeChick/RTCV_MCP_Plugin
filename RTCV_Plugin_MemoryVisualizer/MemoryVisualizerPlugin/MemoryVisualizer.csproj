@@ -103,9 +103,12 @@
       <Version>5.7.0</Version>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="NLog">
+      <Version>5.2.0</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="FodyWeavers.xsd">
+    <None Include="FodyWeavers.xml">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
@@ -151,6 +154,9 @@
       <Project>{364c705e-b7ab-4a94-a59b-88899ce65958}</Project>
       <Name>Vanguard</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="paintbrush.cur" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

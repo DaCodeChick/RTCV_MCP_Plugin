@@ -1,17 +1,16 @@
-namespace MemoryVizualizer.UI
+namespace MemoryVisualizer.UI
 {
     using System;
-    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Windows.Forms;
 
     public partial class NumericTrackbar : UserControl
     {
-        private long _Maximum = (long)ushort.MaxValue;
-        private string _Name = "Name";
+        private long _maximum = ushort.MaxValue;
+        private string _name = "Name";
         private volatile bool updatingFromCode;
-        private long _Value;
-        private long _Minimum;
+        private long _value;
+        private long _minimum;
         public Func<long, long> ValueCorrection;
 
         public event Action<object, EventArgs> ValueChanged;
@@ -19,32 +18,30 @@ namespace MemoryVizualizer.UI
         public virtual void OnValueChanged(EventArgs e)
         {
             Action<object, EventArgs> valueChanged = this.ValueChanged;
-            if (valueChanged == null)
-                return;
-            valueChanged((object)this, e);
+            valueChanged?.Invoke(this, e);
         }
 
         [Description("Value the control holds")]
         [Category("Data")]
         public long Value
         {
-            get
-            {
-                return this._Value;
-            }
+            get => this._value;
             set
             {
                 if (this.updatingFromCode)
                     return;
+                
                 if (value > this.Maximum)
                     value = this.Maximum;
                 else if (value < this.Minimum)
                     value = this.Minimum;
+                
                 if (this.ValueCorrection != null)
                     value = this.ValueCorrection(value);
-                this._Value = value;
+                
+                this._value = value;
                 this.GeneralUpdate();
-                this.OnValueChanged((EventArgs)null);
+                this.OnValueChanged(null);
             }
         }
 
@@ -52,28 +49,19 @@ namespace MemoryVizualizer.UI
         [Category("Data")]
         public bool Hexadecimal
         {
-            get
-            {
-                return this.nmBox.Hexadecimal;
-            }
-            set
-            {
-                this.nmBox.Hexadecimal = value;
-            }
+            get => this.nmBox.Hexadecimal;
+            set => this.nmBox.Hexadecimal = value;
         }
 
         [Description("Minimum value of the control")]
         [Category("Data")]
         public long Minimum
         {
-            get
-            {
-                return this._Minimum;
-            }
+            get => this._minimum;
             set
             {
                 this.updatingFromCode = true;
-                this._Minimum = value;
+                this._minimum = value;
                 this.nmBox.Minimum = value;
                 this.tbSlider.Minimum = Convert.ToInt32(value);
                 this.updatingFromCode = false;
@@ -84,14 +72,11 @@ namespace MemoryVizualizer.UI
         [Category("Data")]
         public long Maximum
         {
-            get
-            {
-                return this._Maximum;
-            }
+            get => this._maximum;
             set
             {
-                this._Maximum = value;
-                this.nmBox.Maximum = (Decimal)value;
+                this._maximum = value;
+                this.nmBox.Maximum = value;
             }
         }
 
@@ -99,13 +84,10 @@ namespace MemoryVizualizer.UI
         [Category("Data")]
         public string Label
         {
-            get
-            {
-                return this._Name;
-            }
+            get => this._name;
             set
             {
-                this._Name = value;
+                this._name = value;
                 this.lbName.Text = value;
             }
         }
@@ -118,20 +100,14 @@ namespace MemoryVizualizer.UI
         private void GeneralUpdate()
         {
             this.updatingFromCode = true;
-            this.nmBox.Value = this._Value;
-            this.tbSlider.Value = (int)((double)this.Value / (double)this.Maximum * (double)this.tbSlider.Maximum);
+            this.nmBox.Value = this._value;
+            this.tbSlider.Value = (int)((double)this.Value / this.Maximum * this.tbSlider.Maximum);
             this.updatingFromCode = false;
         }
 
-        private double SliderPercentage()
-        {
-            return (double)this.tbSlider.Value / (double)this.tbSlider.Maximum;
-        }
+        private double SliderPercentage() => (double)this.tbSlider.Value / this.tbSlider.Maximum;
 
-        private double BoxPercent()
-        {
-            return (double)this.nmBox.Value / (double)this.nmBox.Maximum;
-        }
+        private double BoxPercent() => (double)this.nmBox.Value / (double)this.nmBox.Maximum;
 
         private void NumericTrackbar_Load(object sender, EventArgs e)
         {
@@ -148,10 +124,12 @@ namespace MemoryVizualizer.UI
             if (this.updatingFromCode)
                 return;
             this.updatingFromCode = true;
+            
             if (this.ValueCorrection != null)
                 this.nmBox.Value = this.ValueCorrection((long)this.nmBox.Value);
+            
             this.tbSlider.Value = Math.Min(this.tbSlider.Maximum, Math.Max(this.tbSlider.Minimum, (int)((double)this.Value / (double)this.Maximum * (double)this.tbSlider.Maximum)));
-            this._Value = (long)this.nmBox.Value;
+            this._value = (long)this.nmBox.Value;
             this.updatingFromCode = false;
             this.OnValueChanged((EventArgs)null);
         }
@@ -161,19 +139,22 @@ namespace MemoryVizualizer.UI
             if (this.updatingFromCode)
                 return;
             this.updatingFromCode = true;
+            
             long val2 = (long)(this.SliderPercentage() * (double)this.Maximum);
+            
             if (this.ValueCorrection != null)
                 val2 = this.ValueCorrection(val2);
             this.nmBox.Value = Math.Min((long)this.nmBox.Maximum, Math.Max((long)this.nmBox.Minimum, val2));
-            this._Value = (long)this.nmBox.Value;
+            
+            this._value = (long)this.nmBox.Value;
             this.updatingFromCode = false;
             this.OnValueChanged((EventArgs)null);
         }
     }
-    internal class NoFocusTrackBar : System.Windows.Forms.TrackBar
+    internal class NoFocusTrackBar : TrackBar
     {
         [System.Runtime.InteropServices.DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, uint msg, int wParam, int lParam);
+        private static extern int SendMessage(IntPtr hWnd, uint msg, int wParam, int lParam);
 
         private static int MakeParam(int loWord, int hiWord)
         {

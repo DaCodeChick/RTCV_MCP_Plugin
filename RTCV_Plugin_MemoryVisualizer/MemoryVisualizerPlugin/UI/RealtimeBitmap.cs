@@ -1,35 +1,27 @@
-namespace MemoryVizualizer.UI
+namespace MemoryVisualizer.UI
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.ComponentModel.Design.Serialization;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Windows;
     using System.Windows.Forms;
     using System.Drawing;
-    using MemoryVizualizer.Formats;
+    using Formats;
     public partial class RealtimeBitmap : UserControl
     {
-        public FastBitmap bitmap = null;
-        public PixFormat curFormat = null;
+        public FastBitmap Bitmap;
+        public PixFormat CurFormat = null;
         public int W = 256;
         public int H = 256;
 
         public RealtimeBitmap()
         {
             InitializeComponent();
-            bitmap = new FastBitmap(W, H);
-            disp.Image = bitmap.Bitmap;
+            Bitmap = new FastBitmap(W, H);
+            disp.Image = Bitmap.Bitmap;
         }
 
         public void SetSize(int w, int h)
         {
-            var oldBmp = bitmap;
-            bitmap = new FastBitmap(w, h);
-            disp.Image = bitmap.Bitmap;
+            var oldBmp = Bitmap;
+            Bitmap = new FastBitmap(w, h);
+            disp.Image = Bitmap.Bitmap;
             W = w;
             H = h;
             oldBmp.Dispose();
@@ -47,11 +39,11 @@ namespace MemoryVizualizer.UI
         //Does not refresh
         private void SetPixels(byte[] bts)
         {
-            int pw = curFormat.BytesWide;
+            int pw = CurFormat.BytesWide;
             int mx = bts.Length;
             int curOffset = 0;
 
-            if (!curFormat.CustomParsing)
+            if (!CurFormat.CustomParsing)
             {
                 for (int y = 0; y < H; y++)
                 {
@@ -62,19 +54,19 @@ namespace MemoryVizualizer.UI
                             //Missing textures yay
                             if ((y / 4) % 2 == 0)
                             {
-                                if ((x / 4) % 2 == 0) bitmap.SetPixel(x, y, Color.Magenta);
-                                else bitmap.SetPixel(x, y, Color.Black);
+                                if ((x / 4) % 2 == 0) Bitmap.SetPixel(x, y, Color.Magenta);
+                                else Bitmap.SetPixel(x, y, Color.Black);
                             }
                             else
                             {
-                                if ((x / 4) % 2 == 0) bitmap.SetPixel(x, y, Color.Black);
-                                else bitmap.SetPixel(x, y, Color.Magenta);
+                                if ((x / 4) % 2 == 0) Bitmap.SetPixel(x, y, Color.Black);
+                                else Bitmap.SetPixel(x, y, Color.Magenta);
                             }
                             //return;
                         }
                         else
                         {
-                            bitmap.SetPixel(x, y, curFormat.Parse(bts, curOffset));
+                            Bitmap.SetPixel(x, y, CurFormat.Parse(bts, curOffset));
                             curOffset += pw;
                         }
                     }
@@ -82,42 +74,8 @@ namespace MemoryVizualizer.UI
             }
             else
             {
-
-
-                if (W % curFormat.Pixels != 0) return;
-                curFormat.CustomParse(bitmap, bts);
-
-                //for (int y = 0; y < bitmap.Height; y++)
-                //{
-                //    for (int x = 0; x < bitmap.Width;)
-                //    {
-                //        if (curOffset + pw > mx)
-                //        {
-                //            if ((y / 4) % 2 == 0)
-                //            {
-                //                if ((x / 4) % 2 == 0) bitmap.SetPixel(x, y, Color.Magenta);
-                //                else bitmap.SetPixel(x, y, Color.Black);
-                //            }
-                //            else
-                //            {
-                //                if ((x / 4) % 2 == 0) bitmap.SetPixel(x, y, Color.Black);
-                //                else bitmap.SetPixel(x, y, Color.Magenta);
-                //            }
-                //            x++;
-                //        }
-                //        else
-                //        {
-                //            var px = curFormat.ParseMultiple(bts, curOffset);
-
-                //            for (int j = 0; j < curFormat.Pixels; j++)
-                //            {
-                //                bitmap.SetPixel(x + j, y, px[j]);
-                //            }
-                //            curOffset += pw * curFormat.Pixels;
-                //            x += curFormat.Pixels;
-                //        }
-                //    }
-                //}
+                if (W % CurFormat.Pixels != 0) return;
+                CurFormat.CustomParse(Bitmap, bts);
             }
         }
     }

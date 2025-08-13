@@ -1,4 +1,4 @@
-namespace MemoryVizualizer.UI
+namespace MemoryVisualizer.UI
 {
 
     partial class PluginForm
@@ -33,8 +33,12 @@ namespace MemoryVizualizer.UI
             this.cbFormat = new System.Windows.Forms.ComboBox();
             this.labelLimiter = new System.Windows.Forms.Label();
             this.gbSettings = new System.Windows.Forms.GroupBox();
-            this.label6 = new System.Windows.Forms.Label();
+            this.cbBrushType = new System.Windows.Forms.ComboBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.nmBrushSize = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.nRowAmt = new System.Windows.Forms.NumericUpDown();
             this.bPlusRow = new System.Windows.Forms.Button();
             this.bMinusRow = new System.Windows.Forms.Button();
@@ -44,7 +48,7 @@ namespace MemoryVizualizer.UI
             this.label3 = new System.Windows.Forms.Label();
             this.bForwardPage = new System.Windows.Forms.Button();
             this.bBackFull = new System.Windows.Forms.Button();
-            this.sliderOffset = new global::MemoryVizualizer.UI.NumericTrackbar();
+            this.sliderOffset = new MemoryVisualizer.UI.NumericTrackbar();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.nAlignment = new System.Windows.Forms.NumericUpDown();
@@ -57,11 +61,13 @@ namespace MemoryVizualizer.UI
             this.bCopyRange = new System.Windows.Forms.Button();
             this.bCopyImage = new System.Windows.Forms.Button();
             this.labelVersion = new System.Windows.Forms.Label();
-            this.display = new global::MemoryVizualizer.UI.RealtimeBitmap();
-            this.sliderDelay = new global::MemoryVizualizer.UI.NumericTrackbar();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.sliderDelay = new MemoryVisualizer.UI.NumericTrackbar();
             this.label8 = new System.Windows.Forms.Label();
+            this.display = new MemoryVisualizer.UI.RealtimeBitmap();
+            this.tbColor = new RTCV.UI.Components.Controls.HexTextBox();
             this.gbSettings.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nmBrushSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nRowAmt)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nAlignment)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nHeight)).BeginInit();
@@ -77,7 +83,7 @@ namespace MemoryVizualizer.UI
             this.cbFormat.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.cbFormat.ForeColor = System.Drawing.Color.White;
             this.cbFormat.FormattingEnabled = true;
-            this.cbFormat.Location = new System.Drawing.Point(11, 112);
+            this.cbFormat.Location = new System.Drawing.Point(11, 122);
             this.cbFormat.Name = "cbFormat";
             this.cbFormat.Size = new System.Drawing.Size(124, 21);
             this.cbFormat.TabIndex = 0;
@@ -88,7 +94,7 @@ namespace MemoryVizualizer.UI
             this.labelLimiter.AutoSize = true;
             this.labelLimiter.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.labelLimiter.ForeColor = System.Drawing.Color.White;
-            this.labelLimiter.Location = new System.Drawing.Point(8, 96);
+            this.labelLimiter.Location = new System.Drawing.Point(8, 106);
             this.labelLimiter.Name = "labelLimiter";
             this.labelLimiter.Size = new System.Drawing.Size(72, 13);
             this.labelLimiter.TabIndex = 1;
@@ -97,8 +103,13 @@ namespace MemoryVizualizer.UI
             // gbSettings
             // 
             this.gbSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.gbSettings.Controls.Add(this.label6);
+            this.gbSettings.Controls.Add(this.tbColor);
+            this.gbSettings.Controls.Add(this.cbBrushType);
+            this.gbSettings.Controls.Add(this.label10);
+            this.gbSettings.Controls.Add(this.label9);
+            this.gbSettings.Controls.Add(this.nmBrushSize);
             this.gbSettings.Controls.Add(this.label7);
+            this.gbSettings.Controls.Add(this.label6);
             this.gbSettings.Controls.Add(this.nRowAmt);
             this.gbSettings.Controls.Add(this.bPlusRow);
             this.gbSettings.Controls.Add(this.bMinusRow);
@@ -125,6 +136,83 @@ namespace MemoryVizualizer.UI
             this.gbSettings.TabStop = false;
             this.gbSettings.Text = "Controls";
             // 
+            // cbBrushType
+            // 
+            this.cbBrushType.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.cbBrushType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbBrushType.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cbBrushType.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.cbBrushType.ForeColor = System.Drawing.Color.White;
+            this.cbBrushType.FormattingEnabled = true;
+            this.cbBrushType.Items.AddRange(new object[] {
+            "Square",
+            "Circle",
+            "Spray can"});
+            this.cbBrushType.Location = new System.Drawing.Point(159, 82);
+            this.cbBrushType.Name = "cbBrushType";
+            this.cbBrushType.Size = new System.Drawing.Size(114, 21);
+            this.cbBrushType.TabIndex = 169;
+            this.cbBrushType.Tag = "color:normal";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.label10.ForeColor = System.Drawing.Color.White;
+            this.label10.Location = new System.Drawing.Point(156, 66);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(65, 13);
+            this.label10.TabIndex = 168;
+            this.label10.Text = "Brush Type:";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.label9.ForeColor = System.Drawing.Color.White;
+            this.label9.Location = new System.Drawing.Point(82, 65);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(63, 13);
+            this.label9.TabIndex = 166;
+            this.label9.Text = "Brush Size:";
+            // 
+            // nmBrushSize
+            // 
+            this.nmBrushSize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.nmBrushSize.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.nmBrushSize.ForeColor = System.Drawing.Color.White;
+            this.nmBrushSize.Location = new System.Drawing.Point(85, 81);
+            this.nmBrushSize.Maximum = new decimal(new int[] {
+            65535,
+            0,
+            0,
+            0});
+            this.nmBrushSize.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nmBrushSize.Name = "nmBrushSize";
+            this.nmBrushSize.Size = new System.Drawing.Size(68, 22);
+            this.nmBrushSize.TabIndex = 165;
+            this.nmBrushSize.Tag = "color:normal";
+            this.nmBrushSize.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.label7.ForeColor = System.Drawing.Color.White;
+            this.label7.Location = new System.Drawing.Point(8, 65);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(71, 13);
+            this.label7.TabIndex = 164;
+            this.label7.Text = "Brush Color:";
+            // 
             // label6
             // 
             this.label6.AutoSize = true;
@@ -135,18 +223,6 @@ namespace MemoryVizualizer.UI
             this.label6.Size = new System.Drawing.Size(56, 13);
             this.label6.TabIndex = 162;
             this.label6.Text = "Row Amt:";
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.label7.ForeColor = System.Drawing.Color.White;
-            this.label7.Location = new System.Drawing.Point(1, 70);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(62, 21);
-            this.label7.TabIndex = 161;
-            this.label7.Text = "Image:";
-            this.label7.Visible = false;
             // 
             // nRowAmt
             // 
@@ -256,7 +332,7 @@ namespace MemoryVizualizer.UI
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.label3.ForeColor = System.Drawing.Color.White;
-            this.label3.Location = new System.Drawing.Point(151, 95);
+            this.label3.Location = new System.Drawing.Point(151, 105);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(63, 13);
             this.label3.TabIndex = 153;
@@ -316,7 +392,7 @@ namespace MemoryVizualizer.UI
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(154, 138);
+            this.label2.Location = new System.Drawing.Point(151, 146);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(45, 13);
             this.label2.TabIndex = 149;
@@ -327,7 +403,7 @@ namespace MemoryVizualizer.UI
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(11, 138);
+            this.label1.Location = new System.Drawing.Point(8, 146);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(42, 13);
             this.label1.TabIndex = 148;
@@ -338,7 +414,7 @@ namespace MemoryVizualizer.UI
             this.nAlignment.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
             this.nAlignment.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.nAlignment.ForeColor = System.Drawing.Color.White;
-            this.nAlignment.Location = new System.Drawing.Point(154, 111);
+            this.nAlignment.Location = new System.Drawing.Point(154, 121);
             this.nAlignment.Maximum = new decimal(new int[] {
             0,
             0,
@@ -356,7 +432,7 @@ namespace MemoryVizualizer.UI
             this.nHeight.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
             this.nHeight.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.nHeight.ForeColor = System.Drawing.Color.White;
-            this.nHeight.Location = new System.Drawing.Point(154, 154);
+            this.nHeight.Location = new System.Drawing.Point(154, 162);
             this.nHeight.Maximum = new decimal(new int[] {
             2048,
             0,
@@ -383,7 +459,7 @@ namespace MemoryVizualizer.UI
             this.nWidth.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
             this.nWidth.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.nWidth.ForeColor = System.Drawing.Color.White;
-            this.nWidth.Location = new System.Drawing.Point(11, 154);
+            this.nWidth.Location = new System.Drawing.Point(11, 162);
             this.nWidth.Maximum = new decimal(new int[] {
             2048,
             0,
@@ -424,9 +500,9 @@ namespace MemoryVizualizer.UI
             this.label4.ForeColor = System.Drawing.Color.White;
             this.label4.Location = new System.Drawing.Point(116, 35);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(157, 13);
+            this.label4.Size = new System.Drawing.Size(158, 13);
             this.label4.TabIndex = 154;
-            this.label4.Text = "memory polled every x frames";
+            this.label4.Text = "Memory polled every x frames";
             // 
             // bLoop
             // 
@@ -496,7 +572,7 @@ namespace MemoryVizualizer.UI
             this.bCopyImage.Tag = "color:light1";
             this.bCopyImage.Text = "Save Image to File";
             this.bCopyImage.UseVisualStyleBackColor = false;
-            this.bCopyImage.Click += new System.EventHandler(this.bCopyImage_Click);
+            this.bCopyImage.Click += new System.EventHandler(this.bSaveImage_Click);
             // 
             // labelVersion
             // 
@@ -510,32 +586,6 @@ namespace MemoryVizualizer.UI
             this.labelVersion.Size = new System.Drawing.Size(22, 21);
             this.labelVersion.TabIndex = 164;
             this.labelVersion.Text = "v";
-            // 
-            // display
-            // 
-            this.display.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.display.Location = new System.Drawing.Point(9, 12);
-            this.display.Margin = new System.Windows.Forms.Padding(0);
-            this.display.Name = "display";
-            this.display.Size = new System.Drawing.Size(512, 512);
-            this.display.TabIndex = 18;
-            // 
-            // sliderDelay
-            // 
-            this.sliderDelay.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.sliderDelay.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.sliderDelay.Hexadecimal = false;
-            this.sliderDelay.Label = "Poll Rate";
-            this.sliderDelay.Location = new System.Drawing.Point(114, 51);
-            this.sliderDelay.Maximum = ((long)(1000));
-            this.sliderDelay.Minimum = ((long)(1));
-            this.sliderDelay.Name = "sliderDelay";
-            this.sliderDelay.Size = new System.Drawing.Size(161, 60);
-            this.sliderDelay.TabIndex = 151;
-            this.sliderDelay.Tag = "color:dark1";
-            this.sliderDelay.Value = ((long)(1));
             // 
             // groupBox1
             // 
@@ -554,6 +604,21 @@ namespace MemoryVizualizer.UI
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Auto-Refresh";
             // 
+            // sliderDelay
+            // 
+            this.sliderDelay.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.sliderDelay.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.sliderDelay.Hexadecimal = false;
+            this.sliderDelay.Label = "Poll Rate";
+            this.sliderDelay.Location = new System.Drawing.Point(114, 51);
+            this.sliderDelay.Maximum = ((long)(1000));
+            this.sliderDelay.Minimum = ((long)(1));
+            this.sliderDelay.Name = "sliderDelay";
+            this.sliderDelay.Size = new System.Drawing.Size(161, 60);
+            this.sliderDelay.TabIndex = 151;
+            this.sliderDelay.Tag = "color:dark1";
+            this.sliderDelay.Value = ((long)(1));
+            // 
             // label8
             // 
             this.label8.AutoSize = true;
@@ -561,9 +626,36 @@ namespace MemoryVizualizer.UI
             this.label8.ForeColor = System.Drawing.Color.White;
             this.label8.Location = new System.Drawing.Point(535, 12);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(201, 32);
+            this.label8.Size = new System.Drawing.Size(200, 32);
             this.label8.TabIndex = 166;
             this.label8.Text = "Memory Visualizer";
+            // 
+            // display
+            // 
+            this.display.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.display.Location = new System.Drawing.Point(9, 12);
+            this.display.Margin = new System.Windows.Forms.Padding(0);
+            this.display.Name = "display";
+            this.display.Size = new System.Drawing.Size(512, 512);
+            this.display.TabIndex = 18;
+            // 
+            // tbColor
+            // 
+            this.tbColor.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.tbColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbColor.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
+            this.tbColor.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.tbColor.ForeColor = System.Drawing.Color.White;
+            this.tbColor.Location = new System.Drawing.Point(11, 81);
+            this.tbColor.MaxLength = 6;
+            this.tbColor.Name = "tbColor";
+            this.tbColor.Nullable = false;
+            this.tbColor.Size = new System.Drawing.Size(68, 22);
+            this.tbColor.TabIndex = 170;
+            this.tbColor.Tag = "color:normal";
+            this.tbColor.Text = "000000";
             // 
             // PluginForm
             // 
@@ -586,6 +678,7 @@ namespace MemoryVizualizer.UI
             this.Text = "Memory Visualizer";
             this.gbSettings.ResumeLayout(false);
             this.gbSettings.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nmBrushSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nRowAmt)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nAlignment)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nHeight)).EndInit();
@@ -605,10 +698,10 @@ namespace MemoryVizualizer.UI
         private System.Windows.Forms.NumericUpDown nWidth;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
-        private global::MemoryVizualizer.UI.NumericTrackbar sliderOffset;
-        private global::MemoryVizualizer.UI.NumericTrackbar sliderDelay;
+        private global::MemoryVisualizer.UI.NumericTrackbar sliderOffset;
+        private global::MemoryVisualizer.UI.NumericTrackbar sliderDelay;
         private System.Windows.Forms.Button bPullOnce;
-        private global::MemoryVizualizer.UI.RealtimeBitmap display;
+        private global::MemoryVisualizer.UI.RealtimeBitmap display;
         private System.Windows.Forms.Button bLoop;
         private System.Windows.Forms.Button bForwardPage;
         private System.Windows.Forms.Button bBackFull;
@@ -620,7 +713,6 @@ namespace MemoryVizualizer.UI
         private System.Windows.Forms.Button bPlusRow;
         private System.Windows.Forms.Button bMinusRow;
         private System.Windows.Forms.NumericUpDown nRowAmt;
-        private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.CheckBox cbLegacyLoop;
         private System.Windows.Forms.Button bCopyRange;
@@ -628,5 +720,11 @@ namespace MemoryVizualizer.UI
         private System.Windows.Forms.Label labelVersion;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label8;
+        public System.Windows.Forms.ComboBox cbBrushType;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.NumericUpDown nmBrushSize;
+        private System.Windows.Forms.Label label7;
+        private RTCV.UI.Components.Controls.HexTextBox tbColor;
     }
 }

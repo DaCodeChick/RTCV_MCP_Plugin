@@ -1,14 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MemoryVizualizer.UI
+namespace MemoryVisualizer.UI
 {
     public partial class MemVisAdvancedSettings : Form
     {
@@ -17,6 +10,7 @@ namespace MemoryVizualizer.UI
         {
             InitializeComponent();
             PixelsPerThread = (int)nPixPerThread.Value;
+            nPixPerThread.ValueChanged += nPixPerThread_ValueChanged;
         }
 
         private void nPixPerThread_ValueChanged(object sender, EventArgs e)

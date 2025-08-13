@@ -1,72 +1,68 @@
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing.Imaging;
 
-namespace MemoryVizualizer.UI
+namespace MemoryVisualizer.UI
 {
     //Made by KSHDO, used with permission https://github.com/ksHDO
     public class FastBitmap : IDisposable
     {
         public Bitmap Bitmap { get; private set; }
-        public Int32[] Bits;
         public int Width { get; private set; }
         public int Height { get; private set; }
-
-        private GCHandle BitHandle;
-        public bool Disposed { get; private set; } = false;
+        private bool Disposed { get; set; }
+        
+        private readonly int[] _bits;
+        private GCHandle _bitHandle;
 
         public FastBitmap(int width, int height)
         {
             Width = width;
             Height = height;
 
-            Bits = new int[width * height];
-            BitHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
-            Bitmap = new Bitmap(width, height, width * 4, PixelFormat.Format32bppArgb, BitHandle.AddrOfPinnedObject());
+            _bits = new int[width * height];
+            _bitHandle = GCHandle.Alloc(_bits, GCHandleType.Pinned);
+            Bitmap = new Bitmap(width, height, width * 4, PixelFormat.Format32bppArgb, _bitHandle.AddrOfPinnedObject());
         }
 
         public void SetPixel(int index, Color color)
         {
-            Bits[index] = color.ToArgb();
+            _bits[index] = color.ToArgb();
         }
 
         public void SetPixel(int index, int color)
         {
-            Bits[index] = color;
+            _bits[index] = color;
         }
 
         public void SetPixel(int index, ColorARGB color)
         {
-            Bits[index] = color;
+            _bits[index] = color;
         }
 
         public void SetPixel(int x, int y, ColorARGB color)
         {
             int i = x + (y * Width);
-            Bits[i] = color;
+            _bits[i] = color;
         }
 
         public void SetPixel(int x, int y, Color color)
         {
             int i = x + (y * Width);
-            Bits[i] = color.ToArgb();
+            _bits[i] = color.ToArgb();
         }
 
         public void SetPixel(int x, int y, int color)
         {
             int i = x + (y * Width);
-            Bits[i] = color;
+            _bits[i] = color;
         }
 
         public Color GetPixel(int x, int y)
         {
             int i = x + (y * Width);
-            return Color.FromArgb(Bits[i]);
+            return Color.FromArgb(_bits[i]);
         }
 
         public void Dispose()
@@ -83,7 +79,7 @@ namespace MemoryVizualizer.UI
             if (dispose)
             {
                 Bitmap.Dispose();
-                BitHandle.Free();
+                _bitHandle.Free();
             }
 
             Disposed = true;

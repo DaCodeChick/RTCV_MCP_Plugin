@@ -1,12 +1,12 @@
-using MemoryVizualizer.UI;
 using NLog;
 using RTCV.Common;
 using RTCV.CorruptCore;
 using RTCV.NetCore;
 using System;
 using System.Windows.Forms;
+using MemoryVisualizer.UI;
 
-namespace MemoryVizualizer
+namespace MemoryVisualizer
 {
     internal class MemVisConnectorEMU : IRoutable
     {
@@ -25,12 +25,13 @@ namespace MemoryVizualizer
                     {
                         SyncObjectSingleton.FormExecute(() =>
                         {
-                            if (((Control)S.GET<PluginForm>()).IsDisposed)
+                            if (S.GET<PluginForm>().IsDisposed)
                             {
-                                S.SET<PluginForm>(new PluginForm());
+                                S.SET(new PluginForm());
                             }
-                            ((Control)S.GET<PluginForm>()).Show();
-                            ((Form)S.GET<PluginForm>()).Activate();
+
+                            S.GET<PluginForm>().Show();
+                            S.GET<PluginForm>().Activate();
                         });
                         break;
                     }

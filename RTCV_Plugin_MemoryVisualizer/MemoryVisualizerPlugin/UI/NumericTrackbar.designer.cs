@@ -1,4 +1,4 @@
-namespace MemoryVizualizer.UI
+namespace MemoryVisualizer.UI
 {
     partial class NumericTrackbar
     {
@@ -34,23 +34,23 @@ namespace MemoryVizualizer.UI
             ((System.ComponentModel.ISupportInitialize)(this.tbSlider)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nmBox)).BeginInit();
             this.SuspendLayout();
-            //
+            // 
             // tbSlider
-            //
+            // 
             this.tbSlider.Location = new System.Drawing.Point(0, 25);
             this.tbSlider.Maximum = 65536;
             this.tbSlider.Name = "tbSlider";
             this.tbSlider.Size = new System.Drawing.Size(161, 45);
             this.tbSlider.TabIndex = 0;
             this.tbSlider.TickFrequency = 6553;
-            //
+            // 
             // nmBox
-            //
-            this.nmBox.BackColor = System.Drawing.Color.FromArgb(96, 96, 96);
-            this.nmBox.Font = new System.Drawing.Font("Segoe UI", 8.25f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, (byte)0);
+            // 
+            this.nmBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(96)))), ((int)(((byte)(96)))));
+            this.nmBox.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.nmBox.ForeColor = System.Drawing.Color.White;
             this.nmBox.Location = new System.Drawing.Point(81, 4);
-            this.nmBox.Maximum = new decimal(new int[4]{
+            this.nmBox.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
@@ -58,23 +58,24 @@ namespace MemoryVizualizer.UI
             this.nmBox.Name = "nmBox";
             this.nmBox.Size = new System.Drawing.Size(68, 22);
             this.nmBox.TabIndex = 1;
-            //
+            this.nmBox.Tag = "color:normal";
+            // 
             // lbName
-            //
+            // 
             this.lbName.AutoSize = true;
-            this.lbName.Font = new System.Drawing.Font("Segoe UI", 10f);
+            this.lbName.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lbName.ForeColor = System.Drawing.Color.White;
             this.lbName.Location = new System.Drawing.Point(3, 6);
             this.lbName.Name = "lbName";
             this.lbName.Size = new System.Drawing.Size(45, 19);
             this.lbName.TabIndex = 2;
             this.lbName.Text = "label1";
-            //
+            // 
             // NumericTrackbar
-            //
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6f, 13f);
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.Controls.Add(this.lbName);
             this.Controls.Add(this.nmBox);
             this.Controls.Add(this.tbSlider);
@@ -90,7 +91,7 @@ namespace MemoryVizualizer.UI
 
         #endregion
 
-        private global::MemoryVizualizer.UI.NoFocusTrackBar tbSlider;
+        private global::MemoryVisualizer.UI.NoFocusTrackBar tbSlider;
         private System.Windows.Forms.NumericUpDown nmBox;
         private System.Windows.Forms.Label lbName;
 
