@@ -11,25 +11,27 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     /// </summary>
     public class StdioTransport : ITransport
     {
+        private static readonly TimeSpan THREAD_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(2);
+
         private Stream stdin;
         private Stream stdout;
         private StreamReader reader;
         private StreamWriter writer;
         private Thread readThread;
-        private bool isRunning;
+        private CancellationTokenSource cancellation;
         private bool disposed;
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
         public event EventHandler<TransportErrorEventArgs> Error;
 
-        public bool IsConnected => isRunning && stdin != null && stdout != null;
+        public bool IsConnected => cancellation != null && !cancellation.IsCancellationRequested && stdin != null && stdout != null;
 
         /// <summary>
         /// Start the stdio transport
         /// </summary>
         public void Start()
         {
-            if (isRunning)
+            if (cancellation != null && !cancellation.IsCancellationRequested)
             {
                 throw new InvalidOperationException("Transport is already running");
             }
@@ -48,7 +50,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                     NewLine = "\n" // Use Unix line endings for consistency
                 };
 
-                isRunning = true;
+                cancellation = new CancellationTokenSource();
 
                 // Start background thread for reading
                 readThread = new Thread(ReadLoop)
@@ -72,22 +74,22 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// </summary>
         public void Stop()
         {
-            if (!isRunning)
+            if (cancellation == null || cancellation.IsCancellationRequested)
             {
                 return;
             }
 
-            isRunning = false;
-
             try
             {
+                // Signal cancellation
+                cancellation.Cancel();
+
                 // Wait for read thread to finish (with timeout)
                 if (readThread != null && readThread.IsAlive)
                 {
-                    if (!readThread.Join(TimeSpan.FromSeconds(2)))
+                    if (!readThread.Join(THREAD_SHUTDOWN_TIMEOUT))
                     {
-                        // Force abort if it doesn't finish
-                        readThread.Abort();
+                        OnError("Read thread did not terminate gracefully within timeout");
                     }
                 }
 
@@ -102,6 +104,11 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
             catch (Exception ex)
             {
                 OnError("Error stopping stdio transport", ex);
+            }
+            finally
+            {
+                cancellation?.Dispose();
+                cancellation = null;
             }
         }
 
@@ -138,7 +145,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         {
             try
             {
-                while (isRunning)
+                while (!cancellation.Token.IsCancellationRequested)
                 {
                     // Read line from stdin (blocking)
                     string line = reader.ReadLine();
@@ -147,7 +154,6 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                     {
                         // EOF reached - stdin closed
                         OnError("stdin closed (EOF)");
-                        isRunning = false;
                         break;
                     }
 
@@ -161,14 +167,13 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                     OnMessageReceived(line);
                 }
             }
-            catch (ThreadAbortException)
+            catch (OperationCanceledException)
             {
-                // Thread was aborted during shutdown - this is expected
+                // Cancellation requested during shutdown - this is expected
             }
             catch (Exception ex)
             {
                 OnError("Error in read loop", ex);
-                isRunning = false;
             }
         }
 

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using RTCV.NetCore;
 using RTCV.CorruptCore;
+using RTCV.Plugins.MCPServer.Helpers;
 
 namespace RTCV.Plugins.MCPServer.MCP.Models
 {
@@ -12,6 +13,8 @@ namespace RTCV.Plugins.MCPServer.MCP.Models
     /// </summary>
     public class EmulationTarget
     {
+        private const int MAX_FILENAME_LENGTH = 200;
+
         /// <summary>
         /// System name (e.g., "NES", "SNES", "Genesis")
         /// </summary>
@@ -60,9 +63,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Models
                 safe = Regex.Replace(safe, @"\s+", "_");
                 
                 // Limit length to prevent filesystem issues
-                if (safe.Length > 200)
+                if (safe.Length > MAX_FILENAME_LENGTH)
                 {
-                    safe = safe.Substring(0, 200);
+                    safe = safe.Substring(0, MAX_FILENAME_LENGTH);
                 }
                 
                 return safe;
@@ -80,42 +83,29 @@ namespace RTCV.Plugins.MCPServer.MCP.Models
         /// </summary>
         public static EmulationTarget GetCurrent()
         {
-            var target = new EmulationTarget();
-            
-            Exception error = null;
-            SyncObjectSingleton.FormExecute(() =>
+            return RtcvThreadHelper.ExecuteOnFormThread(() =>
             {
-                try
+                var target = new EmulationTarget();
+
+                if (AllSpec.VanguardSpec != null)
                 {
-                    if (AllSpec.VanguardSpec != null)
-                    {
-                        target.System = AllSpec.VanguardSpec[VSPEC.SYSTEM] as string ?? "Unknown";
-                        target.GameName = AllSpec.VanguardSpec[VSPEC.GAMENAME] as string ?? "None";
-                        target.Core = AllSpec.VanguardSpec[VSPEC.SYSTEMCORE] as string ?? "Unknown";
-                        target.VanguardName = AllSpec.VanguardSpec[VSPEC.NAME] as string ?? "Unknown";
-                        target.Attached = RtcCore.Attached;
-                    }
-                    else
-                    {
-                        target.System = "Unknown";
-                        target.GameName = "None";
-                        target.Core = "Unknown";
-                        target.VanguardName = "Unknown";
-                        target.Attached = false;
-                    }
+                    target.System = AllSpec.VanguardSpec[VSPEC.SYSTEM] as string ?? "Unknown";
+                    target.GameName = AllSpec.VanguardSpec[VSPEC.GAMENAME] as string ?? "None";
+                    target.Core = AllSpec.VanguardSpec[VSPEC.SYSTEMCORE] as string ?? "Unknown";
+                    target.VanguardName = AllSpec.VanguardSpec[VSPEC.NAME] as string ?? "Unknown";
+                    target.Attached = RtcCore.Attached;
                 }
-                catch (Exception ex)
+                else
                 {
-                    error = ex;
+                    target.System = "Unknown";
+                    target.GameName = "None";
+                    target.Core = "Unknown";
+                    target.VanguardName = "Unknown";
+                    target.Attached = false;
                 }
+
+                return target;
             });
-
-            if (error != null)
-            {
-                throw error;
-            }
-
-            return target;
         }
 
         /// <summary>
