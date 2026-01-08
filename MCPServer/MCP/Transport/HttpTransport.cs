@@ -14,6 +14,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     /// </summary>
     public class HttpTransport : ITransport
     {
+        private const int MAX_REQUEST_SIZE_BYTES = 1024 * 1024; // 1MB - protects against DoS via large requests
+        private static readonly TimeSpan THREAD_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(2);
+
         private HttpListener listener;
         private Thread listenerThread;
         private Thread sseWriterThread;
@@ -137,12 +140,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                 // Wait for threads to finish gracefully
                 if (listenerThread != null && listenerThread.IsAlive)
                 {
-                    listenerThread.Join(TimeSpan.FromSeconds(2));
+                    listenerThread.Join(THREAD_SHUTDOWN_TIMEOUT);
                 }
 
                 if (sseWriterThread != null && sseWriterThread.IsAlive)
                 {
-                    sseWriterThread.Join(TimeSpan.FromSeconds(2));
+                    sseWriterThread.Join(THREAD_SHUTDOWN_TIMEOUT);
                 }
 
                 listener?.Close();
@@ -332,6 +335,18 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         {
             try
             {
+                // Check request size to prevent DoS attacks
+                if (context.Request.ContentLength64 > MAX_REQUEST_SIZE_BYTES)
+                {
+                    context.Response.StatusCode = 413; // Payload Too Large
+                    byte[] errorBytes = Encoding.UTF8.GetBytes($"Request too large. Maximum size is {MAX_REQUEST_SIZE_BYTES} bytes.");
+                    context.Response.ContentLength64 = errorBytes.Length;
+                    context.Response.OutputStream.Write(errorBytes, 0, errorBytes.Length);
+                    context.Response.Close();
+                    OnError($"Rejected request exceeding size limit: {context.Request.ContentLength64} bytes");
+                    return;
+                }
+
                 // Read request body
                 using (StreamReader reader = new StreamReader(context.Request.InputStream, Encoding.UTF8))
                 {

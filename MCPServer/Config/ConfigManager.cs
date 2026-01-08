@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Newtonsoft.Json;
 using RTCVLogging = RTCV.Common.Logging;
 
@@ -47,7 +49,7 @@ namespace RTCV.Plugins.MCPServer.Config
                 }
 
                 // Read and deserialize
-                string json = File.ReadAllText(configPath);
+                string json = File.ReadAllText(configPath, Encoding.UTF8);
                 var config = JsonConvert.DeserializeObject<ServerConfig>(json);
                 
                 if (config == null)
@@ -96,8 +98,8 @@ namespace RTCV.Plugins.MCPServer.Config
                 
                 string json = JsonConvert.SerializeObject(config, settings);
                 
-                // Write to file
-                File.WriteAllText(configPath, json);
+                // Write to file with explicit UTF-8 encoding
+                File.WriteAllText(configPath, json, Encoding.UTF8);
                 
                 RTCVLogging.GlobalLogger.Info($"[MCP Server] Configuration saved to: {configPath}");
                 return true;

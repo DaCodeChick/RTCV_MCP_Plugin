@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using RTCV.Common;
 
@@ -40,7 +41,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Models
                     string filePath = GetRegionsFilePath(target);
                     if (File.Exists(filePath))
                     {
-                        string json = File.ReadAllText(filePath);
+                        string json = File.ReadAllText(filePath, Encoding.UTF8);
                         var regions = JsonConvert.DeserializeObject<List<MemoryRegion>>(json);
                         
                         _regions.Clear();
@@ -74,7 +75,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Models
                     string filePath = GetRegionsFilePath(target);
                     var regions = _regions.Values.ToList();
                     string json = JsonConvert.SerializeObject(regions, Formatting.Indented);
-                    File.WriteAllText(filePath, json);
+                    File.WriteAllText(filePath, json, Encoding.UTF8);
                 }
                 catch (Exception ex)
                 {
