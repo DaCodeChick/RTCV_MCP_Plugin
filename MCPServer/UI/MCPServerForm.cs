@@ -58,6 +58,11 @@ namespace RTCV.Plugins.MCPServer
             txtHttpAddress.Enabled = config.Server.EnableHttp;
             numHttpPort.Enabled = config.Server.EnableHttp;
 
+            // Advanced settings
+            numMaxRequestSize.Value = config.Server.MaxRequestSizeBytes / (1024 * 1024); // Convert bytes to MB
+            numShutdownTimeout.Value = config.Server.ShutdownTimeoutMs;
+            numMaxFilenameLength.Value = config.Server.MaxFileNameLength;
+
             // Logging settings
             chkLoggingEnabled.Checked = config.Logging.Enabled;
             cmbLogLevel.SelectedIndex = (int)config.Logging.Level;
@@ -83,6 +88,11 @@ namespace RTCV.Plugins.MCPServer
             config.Server.EnableHttp = chkEnableHttp.Checked;
             config.Server.Address = txtHttpAddress.Text;
             config.Server.Port = (int)numHttpPort.Value;
+
+            // Advanced settings
+            config.Server.MaxRequestSizeBytes = (int)numMaxRequestSize.Value * 1024 * 1024; // Convert MB to bytes
+            config.Server.ShutdownTimeoutMs = (int)numShutdownTimeout.Value;
+            config.Server.MaxFileNameLength = (int)numMaxFilenameLength.Value;
 
             // Logging settings
             config.Logging.Enabled = chkLoggingEnabled.Checked;

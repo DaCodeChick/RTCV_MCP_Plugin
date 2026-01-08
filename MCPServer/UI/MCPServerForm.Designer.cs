@@ -51,12 +51,25 @@ namespace RTCV.Plugins.MCPServer
             this.chkMemoryReadEnabled = new System.Windows.Forms.CheckBox();
             this.chkMemoryWriteEnabled = new System.Windows.Forms.CheckBox();
             this.lblMemoryWarning = new System.Windows.Forms.Label();
+            this.grpAdvancedSettings = new System.Windows.Forms.GroupBox();
+            this.lblMaxRequestSize = new System.Windows.Forms.Label();
+            this.numMaxRequestSize = new System.Windows.Forms.NumericUpDown();
+            this.lblMaxRequestSizeMB = new System.Windows.Forms.Label();
+            this.lblShutdownTimeout = new System.Windows.Forms.Label();
+            this.numShutdownTimeout = new System.Windows.Forms.NumericUpDown();
+            this.lblShutdownTimeoutMs = new System.Windows.Forms.Label();
+            this.lblMaxFilenameLength = new System.Windows.Forms.Label();
+            this.numMaxFilenameLength = new System.Windows.Forms.NumericUpDown();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
             this.grpServerControl.SuspendLayout();
             this.grpServerSettings.SuspendLayout();
             this.grpLogging.SuspendLayout();
             this.grpToolSettings.SuspendLayout();
+            this.grpAdvancedSettings.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaxRequestSize)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numShutdownTimeout)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaxFilenameLength)).BeginInit();
             this.SuspendLayout();
             // 
             // grpServerControl
@@ -268,7 +281,7 @@ namespace RTCV.Plugins.MCPServer
             this.grpToolSettings.Controls.Add(this.chkMemoryReadEnabled);
             this.grpToolSettings.Controls.Add(this.chkMemoryWriteEnabled);
             this.grpToolSettings.Controls.Add(this.lblMemoryWarning);
-            this.grpToolSettings.Location = new System.Drawing.Point(12, 290);
+            this.grpToolSettings.Location = new System.Drawing.Point(12, 365);
             this.grpToolSettings.Name = "grpToolSettings";
             this.grpToolSettings.Size = new System.Drawing.Size(460, 100);
             this.grpToolSettings.TabIndex = 3;
@@ -304,9 +317,103 @@ namespace RTCV.Plugins.MCPServer
             this.lblMemoryWarning.TabIndex = 2;
             this.lblMemoryWarning.Text = "⚠ Warning: Memory tools allow direct memory access. Enable at your own risk.";
             // 
+            // grpAdvancedSettings
+            // 
+            this.grpAdvancedSettings.Controls.Add(this.lblMaxRequestSize);
+            this.grpAdvancedSettings.Controls.Add(this.numMaxRequestSize);
+            this.grpAdvancedSettings.Controls.Add(this.lblMaxRequestSizeMB);
+            this.grpAdvancedSettings.Controls.Add(this.lblShutdownTimeout);
+            this.grpAdvancedSettings.Controls.Add(this.numShutdownTimeout);
+            this.grpAdvancedSettings.Controls.Add(this.lblShutdownTimeoutMs);
+            this.grpAdvancedSettings.Controls.Add(this.lblMaxFilenameLength);
+            this.grpAdvancedSettings.Controls.Add(this.numMaxFilenameLength);
+            this.grpAdvancedSettings.Location = new System.Drawing.Point(12, 254);
+            this.grpAdvancedSettings.Name = "grpAdvancedSettings";
+            this.grpAdvancedSettings.Size = new System.Drawing.Size(460, 105);
+            this.grpAdvancedSettings.TabIndex = 6;
+            this.grpAdvancedSettings.TabStop = false;
+            this.grpAdvancedSettings.Text = "Advanced Settings";
+            // 
+            // lblMaxRequestSize
+            // 
+            this.lblMaxRequestSize.AutoSize = true;
+            this.lblMaxRequestSize.Location = new System.Drawing.Point(15, 25);
+            this.lblMaxRequestSize.Name = "lblMaxRequestSize";
+            this.lblMaxRequestSize.Size = new System.Drawing.Size(130, 13);
+            this.lblMaxRequestSize.TabIndex = 0;
+            this.lblMaxRequestSize.Text = "Max HTTP Request Size:";
+            // 
+            // numMaxRequestSize
+            // 
+            this.numMaxRequestSize.Location = new System.Drawing.Point(151, 23);
+            this.numMaxRequestSize.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
+            this.numMaxRequestSize.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numMaxRequestSize.Name = "numMaxRequestSize";
+            this.numMaxRequestSize.Size = new System.Drawing.Size(70, 20);
+            this.numMaxRequestSize.TabIndex = 1;
+            this.numMaxRequestSize.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            // 
+            // lblMaxRequestSizeMB
+            // 
+            this.lblMaxRequestSizeMB.AutoSize = true;
+            this.lblMaxRequestSizeMB.Location = new System.Drawing.Point(227, 25);
+            this.lblMaxRequestSizeMB.Name = "lblMaxRequestSizeMB";
+            this.lblMaxRequestSizeMB.Size = new System.Drawing.Size(23, 13);
+            this.lblMaxRequestSizeMB.TabIndex = 2;
+            this.lblMaxRequestSizeMB.Text = "MB";
+            // 
+            // lblShutdownTimeout
+            // 
+            this.lblShutdownTimeout.AutoSize = true;
+            this.lblShutdownTimeout.Location = new System.Drawing.Point(15, 51);
+            this.lblShutdownTimeout.Name = "lblShutdownTimeout";
+            this.lblShutdownTimeout.Size = new System.Drawing.Size(104, 13);
+            this.lblShutdownTimeout.TabIndex = 3;
+            this.lblShutdownTimeout.Text = "Shutdown Timeout:";
+            // 
+            // numShutdownTimeout
+            // 
+            this.numShutdownTimeout.Increment = new decimal(new int[] { 100, 0, 0, 0 });
+            this.numShutdownTimeout.Location = new System.Drawing.Point(151, 49);
+            this.numShutdownTimeout.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
+            this.numShutdownTimeout.Minimum = new decimal(new int[] { 500, 0, 0, 0 });
+            this.numShutdownTimeout.Name = "numShutdownTimeout";
+            this.numShutdownTimeout.Size = new System.Drawing.Size(70, 20);
+            this.numShutdownTimeout.TabIndex = 4;
+            this.numShutdownTimeout.Value = new decimal(new int[] { 2000, 0, 0, 0 });
+            // 
+            // lblShutdownTimeoutMs
+            // 
+            this.lblShutdownTimeoutMs.AutoSize = true;
+            this.lblShutdownTimeoutMs.Location = new System.Drawing.Point(227, 51);
+            this.lblShutdownTimeoutMs.Name = "lblShutdownTimeoutMs";
+            this.lblShutdownTimeoutMs.Size = new System.Drawing.Size(20, 13);
+            this.lblShutdownTimeoutMs.TabIndex = 5;
+            this.lblShutdownTimeoutMs.Text = "ms";
+            // 
+            // lblMaxFilenameLength
+            // 
+            this.lblMaxFilenameLength.AutoSize = true;
+            this.lblMaxFilenameLength.Location = new System.Drawing.Point(15, 77);
+            this.lblMaxFilenameLength.Name = "lblMaxFilenameLength";
+            this.lblMaxFilenameLength.Size = new System.Drawing.Size(116, 13);
+            this.lblMaxFilenameLength.TabIndex = 6;
+            this.lblMaxFilenameLength.Text = "Max Filename Length:";
+            // 
+            // numMaxFilenameLength
+            // 
+            this.numMaxFilenameLength.Increment = new decimal(new int[] { 10, 0, 0, 0 });
+            this.numMaxFilenameLength.Location = new System.Drawing.Point(151, 75);
+            this.numMaxFilenameLength.Maximum = new decimal(new int[] { 500, 0, 0, 0 });
+            this.numMaxFilenameLength.Minimum = new decimal(new int[] { 50, 0, 0, 0 });
+            this.numMaxFilenameLength.Name = "numMaxFilenameLength";
+            this.numMaxFilenameLength.Size = new System.Drawing.Size(70, 20);
+            this.numMaxFilenameLength.TabIndex = 7;
+            this.numMaxFilenameLength.Value = new decimal(new int[] { 200, 0, 0, 0 });
+            // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(316, 396);
+            this.btnSave.Location = new System.Drawing.Point(316, 471);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 4;
@@ -316,7 +423,7 @@ namespace RTCV.Plugins.MCPServer
             // 
             // btnClose
             // 
-            this.btnClose.Location = new System.Drawing.Point(397, 396);
+            this.btnClose.Location = new System.Drawing.Point(397, 471);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 5;
@@ -332,6 +439,7 @@ namespace RTCV.Plugins.MCPServer
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.grpToolSettings);
+            this.Controls.Add(this.grpAdvancedSettings);
             this.Controls.Add(this.grpLogging);
             this.Controls.Add(this.grpServerSettings);
             this.Controls.Add(this.grpServerControl);
@@ -350,6 +458,11 @@ namespace RTCV.Plugins.MCPServer
             this.grpLogging.PerformLayout();
             this.grpToolSettings.ResumeLayout(false);
             this.grpToolSettings.PerformLayout();
+            this.grpAdvancedSettings.ResumeLayout(false);
+            this.grpAdvancedSettings.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaxRequestSize)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numShutdownTimeout)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMaxFilenameLength)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -375,6 +488,15 @@ namespace RTCV.Plugins.MCPServer
         private System.Windows.Forms.ComboBox cmbLogLevel;
         private System.Windows.Forms.Label lblLogPath;
         private System.Windows.Forms.TextBox txtLogPath;
+        private System.Windows.Forms.GroupBox grpAdvancedSettings;
+        private System.Windows.Forms.Label lblMaxRequestSize;
+        private System.Windows.Forms.NumericUpDown numMaxRequestSize;
+        private System.Windows.Forms.Label lblMaxRequestSizeMB;
+        private System.Windows.Forms.Label lblShutdownTimeout;
+        private System.Windows.Forms.NumericUpDown numShutdownTimeout;
+        private System.Windows.Forms.Label lblShutdownTimeoutMs;
+        private System.Windows.Forms.Label lblMaxFilenameLength;
+        private System.Windows.Forms.NumericUpDown numMaxFilenameLength;
         private System.Windows.Forms.GroupBox grpToolSettings;
         private System.Windows.Forms.CheckBox chkMemoryReadEnabled;
         private System.Windows.Forms.CheckBox chkMemoryWriteEnabled;
