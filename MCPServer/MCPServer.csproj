@@ -4,7 +4,7 @@
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
-    <OutputPath>..\..\..\RTCV\Build\RTC\PLUGINS\</OutputPath>
+    <OutputPath>..\..\RTCV\Build\RTC\PLUGINS\</OutputPath>
     <!-- Use Build\ instead of Build\net471\ for output -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
@@ -16,19 +16,19 @@
   
   <!-- RTCV Library References -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\RTCV\Source\Libraries\Common\Common.csproj">
+    <ProjectReference Include="..\..\RTCV\Source\Libraries\Common\Common.csproj">
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\RTCV\Source\Libraries\CorruptCore\CorruptCore.csproj">
+    <ProjectReference Include="..\..\RTCV\Source\Libraries\CorruptCore\CorruptCore.csproj">
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\RTCV\Source\Libraries\NetCore\NetCore.csproj">
+    <ProjectReference Include="..\..\RTCV\Source\Libraries\NetCore\NetCore.csproj">
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\RTCV\Source\Libraries\PluginHost\PluginHost.csproj">
+    <ProjectReference Include="..\..\RTCV\Source\Libraries\PluginHost\PluginHost.csproj">
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\RTCV\Source\Frontend\UI\UI.csproj">
+    <ProjectReference Include="..\..\RTCV\Source\Frontend\UI\UI.csproj">
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
@@ -36,6 +36,7 @@
   <!-- NuGet Packages -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.ComponentModel.Composition" Version="7.0.0" />
     <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>

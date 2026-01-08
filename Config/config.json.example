@@ -1,0 +1,69 @@
+{
+  "version": "1.0",
+  "server": {
+    "autoStart": false,
+    "address": "127.0.0.1",
+    "port": 8080,
+    "enableHttp": false,
+    "enableStdio": true
+  },
+  "logging": {
+    "enabled": true,
+    "path": "Plugins/MCPServer/Logs/mcp.log",
+    "level": "Normal"
+  },
+  "tools": {
+    "blast_generate": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "blast_toggle": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "blast_set_intensity": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "memory_domains_list": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "get_status": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "engine_get_config": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "engine_set_config": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "savestate_create": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "savestate_load": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "stockpile_add": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "stockpile_apply": {
+      "enabled": true,
+      "requireConfirmation": false
+    },
+    "memory_read": {
+      "enabled": false,
+      "requireConfirmation": true
+    },
+    "memory_write": {
+      "enabled": false,
+      "requireConfirmation": true
+    }
+  }
+}
