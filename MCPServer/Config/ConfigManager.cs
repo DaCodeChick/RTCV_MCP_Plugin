@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using Newtonsoft.Json;
-using RTCV.Common;
+using RTCVLogging = RTCV.Common.Logging;
 
 namespace RTCV.Plugins.MCPServer.Config
 {
@@ -34,13 +34,13 @@ namespace RTCV.Plugins.MCPServer.Config
                 if (!Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
-                    Logging.GlobalLogger.Info($"[MCP Server] Created config directory: {directory}");
+                    RTCVLogging.GlobalLogger.Info($"[MCP Server] Created config directory: {directory}");
                 }
 
                 // Check if config file exists
                 if (!File.Exists(configPath))
                 {
-                    Logging.GlobalLogger.Info($"[MCP Server] Config file not found, creating default: {configPath}");
+                    RTCVLogging.GlobalLogger.Info($"[MCP Server] Config file not found, creating default: {configPath}");
                     var defaultConfig = ServerConfig.CreateDefault();
                     SaveConfig(defaultConfig);
                     return defaultConfig;
@@ -52,21 +52,21 @@ namespace RTCV.Plugins.MCPServer.Config
                 
                 if (config == null)
                 {
-                    Logging.GlobalLogger.Warn($"[MCP Server] Failed to deserialize config, using defaults");
+                    RTCVLogging.GlobalLogger.Warn($"[MCP Server] Failed to deserialize config, using defaults");
                     return ServerConfig.CreateDefault();
                 }
 
                 // Validate and fill missing tools
                 ValidateConfig(config);
                 
-                Logging.GlobalLogger.Info($"[MCP Server] Configuration loaded from: {configPath}");
+                RTCVLogging.GlobalLogger.Info($"[MCP Server] Configuration loaded from: {configPath}");
                 return config;
             }
             catch (Exception ex)
             {
-                Logging.GlobalLogger.Error($"[MCP Server] Error loading config: {ex.Message}");
-                Logging.GlobalLogger.Error(ex.ToString());
-                Logging.GlobalLogger.Warn("[MCP Server] Using default configuration");
+                RTCVLogging.GlobalLogger.Error($"[MCP Server] Error loading config: {ex.Message}");
+                RTCVLogging.GlobalLogger.Error(ex.ToString());
+                RTCVLogging.GlobalLogger.Warn("[MCP Server] Using default configuration");
                 return ServerConfig.CreateDefault();
             }
         }
@@ -99,13 +99,13 @@ namespace RTCV.Plugins.MCPServer.Config
                 // Write to file
                 File.WriteAllText(configPath, json);
                 
-                Logging.GlobalLogger.Info($"[MCP Server] Configuration saved to: {configPath}");
+                RTCVLogging.GlobalLogger.Info($"[MCP Server] Configuration saved to: {configPath}");
                 return true;
             }
             catch (Exception ex)
             {
-                Logging.GlobalLogger.Error($"[MCP Server] Error saving config: {ex.Message}");
-                Logging.GlobalLogger.Error(ex.ToString());
+                RTCVLogging.GlobalLogger.Error($"[MCP Server] Error saving config: {ex.Message}");
+                RTCVLogging.GlobalLogger.Error(ex.ToString());
                 return false;
             }
         }
@@ -131,7 +131,7 @@ namespace RTCV.Plugins.MCPServer.Config
                 if (!config.Tools.ContainsKey(tool.Key))
                 {
                     config.Tools[tool.Key] = tool.Value;
-                    Logging.GlobalLogger.Info($"[MCP Server] Added missing tool config: {tool.Key}");
+                    RTCVLogging.GlobalLogger.Info($"[MCP Server] Added missing tool config: {tool.Key}");
                 }
             }
 
