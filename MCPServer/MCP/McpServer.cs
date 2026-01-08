@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using RTCV.Plugins.MCPServer.Config;
 using RTCV.Plugins.MCPServer.Logging;
 using RTCV.Plugins.MCPServer.MCP.Models;
@@ -20,6 +21,7 @@ namespace RTCV.Plugins.MCPServer.MCP
         private readonly Logger logger;
         private readonly JsonRpcHandler rpcHandler;
         private readonly ToolRegistry toolRegistry;
+        private readonly MemoryRegionManager regionManager;
 
         private ITransport transport;
         private ServerState state;
@@ -60,6 +62,13 @@ namespace RTCV.Plugins.MCPServer.MCP
             this.toolRegistry = new ToolRegistry(config);
             this.state = ServerState.Stopped;
 
+            // Initialize memory region manager
+            string regionsPath = Path.Combine(
+                Path.GetDirectoryName(typeof(McpServer).Assembly.Location),
+                "..", "..", "Plugins", "MCPServer", "MemoryRegions"
+            );
+            this.regionManager = new MemoryRegionManager(Path.GetFullPath(regionsPath));
+
             // Register all tool handlers
             RegisterToolHandlers();
 
@@ -78,6 +87,7 @@ namespace RTCV.Plugins.MCPServer.MCP
 
             // Status tools
             toolRegistry.RegisterTool(new GetStatusHandler());
+            toolRegistry.RegisterTool(new GetEmulationTargetHandler());
             toolRegistry.RegisterTool(new MemoryDomainsListHandler());
 
             // Engine tools
@@ -95,6 +105,15 @@ namespace RTCV.Plugins.MCPServer.MCP
             // Memory tools (disabled by default in config)
             toolRegistry.RegisterTool(new MemoryReadHandler());
             toolRegistry.RegisterTool(new MemoryWriteHandler());
+
+            // Memory region annotation tools
+            toolRegistry.RegisterTool(new AddMemoryRegionTool(regionManager));
+            toolRegistry.RegisterTool(new ListMemoryRegionsTool(regionManager));
+            toolRegistry.RegisterTool(new GetMemoryRegionTool(regionManager));
+            toolRegistry.RegisterTool(new UpdateMemoryRegionTool(regionManager));
+            toolRegistry.RegisterTool(new RemoveMemoryRegionTool(regionManager));
+            toolRegistry.RegisterTool(new ReadMemoryRegionTool(regionManager));
+            toolRegistry.RegisterTool(new WriteMemoryRegionTool(regionManager));
 
             logger.LogInfo("Registered all tool handlers");
         }

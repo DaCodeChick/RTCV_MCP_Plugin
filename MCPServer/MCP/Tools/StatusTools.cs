@@ -7,6 +7,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
+    using Newtonsoft.Json;
     
     using RTCV.Plugins.MCPServer.MCP.Models;
 
@@ -267,6 +268,94 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 len = len / 1024;
             }
             return $"{len:0.##} {sizes[order]}";
+        }
+    }
+
+    /// <summary>
+    /// Tool handler for getting emulation target information.
+    /// </summary>
+    public class GetEmulationTargetHandler : IToolHandler
+    {
+        public string Name => "get_emulation_target_info";
+        public string Description => "Get information about the current emulation target (system, game, core)";
+
+        public ToolInputSchema InputSchema => new ToolInputSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, object>()
+        };
+
+        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    ToolLogger.Log("Getting emulation target info...");
+
+                    var target = EmulationTarget.GetCurrent();
+
+                    // Format as JSON
+                    string json = JsonConvert.SerializeObject(target, Formatting.Indented);
+
+                    // Also format as human-readable markdown
+                    StringBuilder markdown = new StringBuilder();
+                    markdown.AppendLine("## Emulation Target Information");
+                    markdown.AppendLine();
+                    markdown.AppendLine($"**Status**: {(target.Attached ? "Connected" : "Not Connected")}");
+                    
+                    if (target.Attached)
+                    {
+                        markdown.AppendLine($"**Game**: {target.GameName}");
+                        markdown.AppendLine($"**System**: {target.System}");
+                        markdown.AppendLine($"**Core**: {target.Core}");
+                        markdown.AppendLine($"**Vanguard**: {target.VanguardName}");
+                        markdown.AppendLine();
+                        markdown.AppendLine($"**Valid Target**: {(target.IsValid() ? "Yes" : "No (no game loaded)")}");
+                        markdown.AppendLine($"**Storage ID**: `{target.FilenameSafeId}`");
+                    }
+                    else
+                    {
+                        markdown.AppendLine();
+                        markdown.AppendLine("*No emulator currently attached. Connect an emulator to RTCV to see target information.*");
+                    }
+
+                    markdown.AppendLine();
+                    markdown.AppendLine("### JSON Data");
+                    markdown.AppendLine("```json");
+                    markdown.AppendLine(json);
+                    markdown.AppendLine("```");
+
+                    return new ToolCallResult
+                    {
+                        Content = new List<ToolContent>
+                        {
+                            new ToolContent
+                            {
+                                Type = "text",
+                                Text = markdown.ToString()
+                            }
+                        },
+                        IsError = false
+                    };
+                }
+                catch (Exception ex)
+                {
+                    ToolLogger.LogError($"Error getting emulation target info: {ex.Message}");
+                    return new ToolCallResult
+                    {
+                        Content = new List<ToolContent>
+                        {
+                            new ToolContent
+                            {
+                                Type = "text",
+                                Text = $"Error getting emulation target info: {ex.Message}"
+                            }
+                        },
+                        IsError = true
+                    };
+                }
+            });
         }
     }
 }

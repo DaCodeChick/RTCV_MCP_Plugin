@@ -36,12 +36,13 @@ namespace RTCV.Plugins.MCPServer.Config
         {
             var config = new ServerConfig();
             
-            // Initialize all 13 tools with safe defaults
+            // Initialize all tools with safe defaults
             config.Tools["blast_generate"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             config.Tools["blast_toggle"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             config.Tools["blast_set_intensity"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             config.Tools["memory_domains_list"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             config.Tools["get_status"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
+            config.Tools["get_emulation_target_info"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             config.Tools["engine_get_config"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             config.Tools["engine_set_config"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             config.Tools["savestate_create"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
@@ -52,6 +53,15 @@ namespace RTCV.Plugins.MCPServer.Config
             // Dangerous tools disabled by default
             config.Tools["memory_read"] = new ToolConfig { Enabled = false, RequireConfirmation = true };
             config.Tools["memory_write"] = new ToolConfig { Enabled = false, RequireConfirmation = true };
+            
+            // Memory region annotation tools (safe, enabled by default)
+            config.Tools["add_memory_region"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
+            config.Tools["list_memory_regions"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
+            config.Tools["get_memory_region"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
+            config.Tools["update_memory_region"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
+            config.Tools["remove_memory_region"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
+            config.Tools["read_memory_region"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
+            config.Tools["write_memory_region"] = new ToolConfig { Enabled = true, RequireConfirmation = false };
             
             return config;
         }
