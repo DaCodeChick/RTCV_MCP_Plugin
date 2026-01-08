@@ -14,9 +14,23 @@ namespace RTCV.Plugins.MCPServer.MCP.Models
     public class EmulationTarget
     {
         /// <summary>
-        /// Maximum filename length (configurable, default 200)
+        /// Maximum filename length (configured at server startup, default 200)
+        /// This is thread-safe as it's set once during initialization
         /// </summary>
-        internal static int MaxFileNameLength { get; set; } = 200;
+        private static int _maxFileNameLength = 200;
+        
+        /// <summary>
+        /// Configure the maximum filename length (call once during server initialization)
+        /// </summary>
+        internal static void Configure(int maxFileNameLength)
+        {
+            if (maxFileNameLength < 50 || maxFileNameLength > 500)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxFileNameLength), 
+                    "MaxFileNameLength must be between 50 and 500");
+            }
+            _maxFileNameLength = maxFileNameLength;
+        }
 
         /// <summary>
         /// System name (e.g., "NES", "SNES", "Genesis")
@@ -66,9 +80,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Models
                 safe = Regex.Replace(safe, @"\s+", "_");
                 
                 // Limit length to prevent filesystem issues
-                if (safe.Length > MaxFileNameLength)
+                if (safe.Length > _maxFileNameLength)
                 {
-                    safe = safe.Substring(0, MaxFileNameLength);
+                    safe = safe.Substring(0, _maxFileNameLength);
                 }
                 
                 return safe;

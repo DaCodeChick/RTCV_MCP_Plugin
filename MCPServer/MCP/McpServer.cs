@@ -11,18 +11,17 @@ namespace RTCV.Plugins.MCPServer.MCP
 {
     /// <summary>
     /// Core MCP server implementation
+    /// Coordinates transport, protocol handling, and request routing
     /// </summary>
     public class McpServer : IDisposable
     {
-        private const string ProtocolVersion = "2024-11-05";
-        private const string ServerName = "RTCV MCP Server";
-        private const string ServerVersion = "1.0.0";
-
         private readonly ServerConfig config;
         private readonly Logger logger;
         private readonly JsonRpcHandler rpcHandler;
         private readonly ToolRegistry toolRegistry;
         private readonly MemoryRegionManager regionManager;
+        private readonly McpProtocolHandler protocolHandler;
+        private readonly McpRequestRouter requestRouter;
 
         private ITransport transport;
         private ServerState state;
@@ -63,13 +62,17 @@ namespace RTCV.Plugins.MCPServer.MCP
             this.toolRegistry = new ToolRegistry(config);
             this.state = ServerState.Stopped;
 
+            // Initialize protocol handler and request router
+            this.protocolHandler = new McpProtocolHandler(toolRegistry, logger);
+            this.requestRouter = new McpRequestRouter(toolRegistry, protocolHandler, logger);
+
             // Initialize memory region manager
             string pluginDir = Path.GetDirectoryName(typeof(McpServer).Assembly.Location);
             string regionsPath = Path.Combine(pluginDir, "..", "..", "Plugins", "MCPServer", "MemoryRegions");
             this.regionManager = new MemoryRegionManager(Path.GetFullPath(regionsPath));
 
-            // Apply config values to static properties
-            EmulationTarget.MaxFileNameLength = config.Server.MaxFileNameLength;
+            // Configure EmulationTarget settings from config
+            EmulationTarget.Configure(config.Server.MaxFileNameLength);
 
             // Register all tool handlers
             RegisterToolHandlers();
@@ -223,56 +226,62 @@ namespace RTCV.Plugins.MCPServer.MCP
 
         /// <summary>
         /// Handle message received from transport
+        /// Fire-and-forget pattern with proper error handling
         /// </summary>
-        private async void OnTransportMessageReceived(object sender, MessageReceivedEventArgs e)
+        private void OnTransportMessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            try
+            // Use Task.Run to avoid blocking the event thread
+            // We intentionally don't await this to avoid async void
+            _ = Task.Run(async () =>
             {
-                logger.LogVerbose($"Received message: {e.Message}");
-
-                // Parse JSON-RPC request
-                JsonRpcRequest request;
                 try
                 {
-                    request = rpcHandler.ParseRequest(e.Message);
-                }
-                catch (JsonRpcException ex)
-                {
-                    // Parse error - send error response if possible
-                    logger.LogError($"JSON-RPC parse error: {ex.Message}");
-                    SendError(null, ex.Code, ex.Message, ex.Data);
-                    return;
-                }
+                    logger.LogVerbose($"Received message: {e.Message}");
 
-                // Check if it's a notification (no response expected)
-                bool isNotification = rpcHandler.IsNotification(request);
-
-                // Dispatch request
-                try
-                {
-                    await HandleRequestAsync(request, isNotification);
-                }
-                catch (JsonRpcException ex)
-                {
-                    if (!isNotification)
+                    // Parse JSON-RPC request
+                    JsonRpcRequest request;
+                    try
                     {
-                        SendError(request.Id, ex.Code, ex.Message, ex.Data);
+                        request = rpcHandler.ParseRequest(e.Message);
+                    }
+                    catch (JsonRpcException ex)
+                    {
+                        // Parse error - send error response if possible
+                        logger.LogError($"JSON-RPC parse error: {ex.Message}");
+                        SendError(null, ex.Code, ex.Message, ex.Data);
+                        return;
+                    }
+
+                    // Check if it's a notification (no response expected)
+                    bool isNotification = rpcHandler.IsNotification(request);
+
+                    // Dispatch request
+                    try
+                    {
+                        await HandleRequestAsync(request, isNotification);
+                    }
+                    catch (JsonRpcException ex)
+                    {
+                        if (!isNotification)
+                        {
+                            SendError(request.Id, ex.Code, ex.Message, ex.Data);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError($"Error handling request '{request.Method}'", ex);
+                        if (!isNotification)
+                        {
+                            SendError(request.Id, JsonRpcErrorCodes.InternalError, 
+                                "Internal server error", ex.Message);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError($"Error handling request '{request.Method}'", ex);
-                    if (!isNotification)
-                    {
-                        SendError(request.Id, JsonRpcErrorCodes.InternalError, 
-                            "Internal server error", ex.Message);
-                    }
+                    logger.LogError("Unhandled error in message handler", ex);
                 }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Unhandled error in message handler", ex);
-            }
+            });
         }
 
         /// <summary>
@@ -291,119 +300,18 @@ namespace RTCV.Plugins.MCPServer.MCP
         }
 
         /// <summary>
-        /// Handle a JSON-RPC request
+        /// Handle a JSON-RPC request by routing it through the request router
         /// </summary>
         private async Task HandleRequestAsync(JsonRpcRequest request, bool isNotification)
         {
-            logger.LogNormal($"Handling method: {request.Method}");
-
-            switch (request.Method)
+            // Route request and get result
+            var result = await requestRouter.RouteRequestAsync(request, isNotification);
+            
+            // Send response if not a notification
+            if (!isNotification && result != null)
             {
-                case "initialize":
-                    HandleInitialize(request);
-                    break;
-
-                case "notifications/initialized":
-                    // Client signals initialization complete (notification only)
-                    logger.LogInfo("Client initialization complete");
-                    break;
-
-                case "tools/list":
-                    HandleToolsList(request);
-                    break;
-
-                case "tools/call":
-                    await HandleToolCallAsync(request);
-                    break;
-
-                default:
-                    if (!isNotification)
-                    {
-                        throw new JsonRpcException(JsonRpcErrorCodes.MethodNotFound,
-                            $"Method '{request.Method}' not found");
-                    }
-                    break;
+                SendResponse(request.Id, result);
             }
-        }
-
-        /// <summary>
-        /// Handle initialize request
-        /// </summary>
-        private void HandleInitialize(JsonRpcRequest request)
-        {
-            logger.LogInfo("Handling initialize request");
-
-            // Parse parameters
-            var initParams = rpcHandler.GetParams<McpInitializeParams>(request);
-
-            // Log client info
-            if (initParams?.ClientInfo != null)
-            {
-                logger.LogInfo($"Client: {initParams.ClientInfo.Name} v{initParams.ClientInfo.Version}");
-            }
-
-            // Build initialize result
-            var result = new McpInitializeResult
-            {
-                ProtocolVersion = ProtocolVersion,
-                ServerInfo = new McpServerInfo
-                {
-                    Name = ServerName,
-                    Version = ServerVersion
-                },
-                Capabilities = new McpCapabilities
-                {
-                    Tools = new ToolsCapability
-                    {
-                        ListChanged = false
-                    }
-                }
-            };
-
-            // Send response
-            SendResponse(request.Id, result);
-            logger.LogInfo("Initialize response sent");
-        }
-
-        /// <summary>
-        /// Handle tools/list request
-        /// </summary>
-        private void HandleToolsList(JsonRpcRequest request)
-        {
-            logger.LogInfo("Handling tools/list request");
-
-            // Get enabled tools from registry
-            var tools = toolRegistry.GetEnabledTools();
-
-            var result = new ToolsListResult
-            {
-                Tools = tools
-            };
-
-            SendResponse(request.Id, result);
-            logger.LogInfo($"Tools list sent ({tools.Count} tools)");
-        }
-
-        /// <summary>
-        /// Handle tools/call request
-        /// </summary>
-        private async Task HandleToolCallAsync(JsonRpcRequest request)
-        {
-            var toolParams = rpcHandler.GetParams<ToolCallParams>(request);
-
-            if (toolParams == null || string.IsNullOrEmpty(toolParams.Name))
-            {
-                throw new JsonRpcException(JsonRpcErrorCodes.InvalidParams, 
-                    "Tool name is required");
-            }
-
-            logger.LogInfo($"Handling tool call: {toolParams.Name}");
-
-            // Invoke tool asynchronously
-            var result = await toolRegistry.InvokeToolAsync(toolParams.Name, toolParams.Arguments);
-
-            SendResponse(request.Id, result);
-            logger.LogInfo($"Tool call result sent for: {toolParams.Name}");
         }
 
         /// <summary>
