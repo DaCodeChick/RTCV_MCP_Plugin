@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using RTCV.Plugins.MCPServer.Config;
 using RTCV.Plugins.MCPServer.Logging;
 using RTCV.Plugins.MCPServer.MCP.Models;
@@ -63,10 +64,8 @@ namespace RTCV.Plugins.MCPServer.MCP
             this.state = ServerState.Stopped;
 
             // Initialize memory region manager
-            string regionsPath = Path.Combine(
-                Path.GetDirectoryName(typeof(McpServer).Assembly.Location),
-                "..", "..", "Plugins", "MCPServer", "MemoryRegions"
-            );
+            string pluginDir = Path.GetDirectoryName(typeof(McpServer).Assembly.Location);
+            string regionsPath = Path.Combine(pluginDir, "..", "..", "Plugins", "MCPServer", "MemoryRegions");
             this.regionManager = new MemoryRegionManager(Path.GetFullPath(regionsPath));
 
             // Register all tool handlers
@@ -214,7 +213,7 @@ namespace RTCV.Plugins.MCPServer.MCP
         /// <summary>
         /// Handle message received from transport
         /// </summary>
-        private void OnTransportMessageReceived(object sender, MessageReceivedEventArgs e)
+        private async void OnTransportMessageReceived(object sender, MessageReceivedEventArgs e)
         {
             try
             {
@@ -240,7 +239,7 @@ namespace RTCV.Plugins.MCPServer.MCP
                 // Dispatch request
                 try
                 {
-                    HandleRequest(request, isNotification);
+                    await HandleRequestAsync(request, isNotification);
                 }
                 catch (JsonRpcException ex)
                 {
@@ -283,7 +282,7 @@ namespace RTCV.Plugins.MCPServer.MCP
         /// <summary>
         /// Handle a JSON-RPC request
         /// </summary>
-        private void HandleRequest(JsonRpcRequest request, bool isNotification)
+        private async Task HandleRequestAsync(JsonRpcRequest request, bool isNotification)
         {
             logger.LogNormal($"Handling method: {request.Method}");
 
@@ -303,7 +302,7 @@ namespace RTCV.Plugins.MCPServer.MCP
                     break;
 
                 case "tools/call":
-                    HandleToolCall(request);
+                    await HandleToolCallAsync(request);
                     break;
 
                 default:
@@ -377,7 +376,7 @@ namespace RTCV.Plugins.MCPServer.MCP
         /// <summary>
         /// Handle tools/call request
         /// </summary>
-        private void HandleToolCall(JsonRpcRequest request)
+        private async Task HandleToolCallAsync(JsonRpcRequest request)
         {
             var toolParams = rpcHandler.GetParams<ToolCallParams>(request);
 
@@ -389,8 +388,8 @@ namespace RTCV.Plugins.MCPServer.MCP
 
             logger.LogInfo($"Handling tool call: {toolParams.Name}");
 
-            // Invoke tool (this will be async when we have real tools)
-            var result = toolRegistry.InvokeToolAsync(toolParams.Name, toolParams.Arguments).Result;
+            // Invoke tool asynchronously
+            var result = await toolRegistry.InvokeToolAsync(toolParams.Name, toolParams.Arguments);
 
             SendResponse(request.Id, result);
             logger.LogInfo($"Tool call result sent for: {toolParams.Name}");

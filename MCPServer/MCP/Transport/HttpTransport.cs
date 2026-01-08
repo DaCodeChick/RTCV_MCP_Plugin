@@ -16,7 +16,8 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     {
         private HttpListener listener;
         private Thread listenerThread;
-        private bool isRunning;
+        private Thread sseWriterThread;
+        private CancellationTokenSource cancellationTokenSource;
         private bool disposed;
         
         private readonly string host;
@@ -30,12 +31,20 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         
         // Message queue for SSE
         private readonly BlockingCollection<string> messageQueue = new BlockingCollection<string>();
-        private Thread sseWriterThread;
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
         public event EventHandler<TransportErrorEventArgs> Error;
 
-        public bool IsConnected => isRunning && listener != null && listener.IsListening;
+        public bool IsConnected 
+        { 
+            get 
+            { 
+                return cancellationTokenSource != null && 
+                       !cancellationTokenSource.IsCancellationRequested && 
+                       listener != null && 
+                       listener.IsListening; 
+            } 
+        }
 
         /// <summary>
         /// Initialize HTTP transport
@@ -54,18 +63,18 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// </summary>
         public void Start()
         {
-            if (isRunning)
+            if (cancellationTokenSource != null && !cancellationTokenSource.IsCancellationRequested)
             {
                 throw new InvalidOperationException("Transport is already running");
             }
 
             try
             {
+                cancellationTokenSource = new CancellationTokenSource();
+                
                 listener = new HttpListener();
                 listener.Prefixes.Add(prefix);
                 listener.Start();
-
-                isRunning = true;
 
                 // Start listener thread
                 listenerThread = new Thread(ListenerLoop)
@@ -97,22 +106,27 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// </summary>
         public void Stop()
         {
-            if (!isRunning)
+            if (cancellationTokenSource == null || cancellationTokenSource.IsCancellationRequested)
             {
                 return;
             }
 
-            isRunning = false;
-
             try
             {
+                // Signal cancellation
+                cancellationTokenSource.Cancel();
+
                 // Stop accepting new connections
                 listener?.Stop();
 
                 // Close SSE connection
                 lock (sseLock)
                 {
-                    sseWriter?.Close();
+                    try
+                    {
+                        sseWriter?.Close();
+                    }
+                    catch { }
                     sseWriter = null;
                     sseResponse = null;
                 }
@@ -120,21 +134,15 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                 // Stop message queue
                 messageQueue.CompleteAdding();
 
-                // Wait for threads to finish
+                // Wait for threads to finish gracefully
                 if (listenerThread != null && listenerThread.IsAlive)
                 {
-                    if (!listenerThread.Join(TimeSpan.FromSeconds(2)))
-                    {
-                        listenerThread.Abort();
-                    }
+                    listenerThread.Join(TimeSpan.FromSeconds(2));
                 }
 
                 if (sseWriterThread != null && sseWriterThread.IsAlive)
                 {
-                    if (!sseWriterThread.Join(TimeSpan.FromSeconds(2)))
-                    {
-                        sseWriterThread.Abort();
-                    }
+                    sseWriterThread.Join(TimeSpan.FromSeconds(2));
                 }
 
                 listener?.Close();
@@ -174,9 +182,11 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// </summary>
         private void ListenerLoop()
         {
+            var token = cancellationTokenSource.Token;
+            
             try
             {
-                while (isRunning)
+                while (!token.IsCancellationRequested)
                 {
                     try
                     {
@@ -186,25 +196,28 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                         // Handle request on a separate thread to avoid blocking
                         ThreadPool.QueueUserWorkItem(_ => HandleRequest(context));
                     }
-                    catch (HttpListenerException ex)
+                    catch (HttpListenerException)
                     {
-                        // Listener was stopped
-                        if (!isRunning)
+                        // Listener was stopped - exit gracefully
+                        if (token.IsCancellationRequested)
                         {
                             break;
                         }
-                        OnError("HTTP listener error", ex);
+                        // Otherwise, log and continue
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Listener was disposed - exit gracefully
+                        break;
                     }
                 }
             }
-            catch (ThreadAbortException)
-            {
-                // Thread was aborted during shutdown - this is expected
-            }
             catch (Exception ex)
             {
-                OnError("Error in listener loop", ex);
-                isRunning = false;
+                if (!token.IsCancellationRequested)
+                {
+                    OnError("Error in listener loop", ex);
+                }
             }
         }
 
@@ -355,10 +368,17 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// </summary>
         private void SseWriterLoop()
         {
+            var token = cancellationTokenSource.Token;
+            
             try
             {
-                foreach (var message in messageQueue.GetConsumingEnumerable())
+                foreach (var message in messageQueue.GetConsumingEnumerable(token))
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     lock (sseLock)
                     {
                         if (sseWriter == null)
@@ -390,13 +410,16 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                     }
                 }
             }
-            catch (ThreadAbortException)
+            catch (OperationCanceledException)
             {
-                // Thread was aborted during shutdown - this is expected
+                // Operation was cancelled - this is expected during shutdown
             }
             catch (Exception ex)
             {
-                OnError("Error in SSE writer loop", ex);
+                if (!token.IsCancellationRequested)
+                {
+                    OnError("Error in SSE writer loop", ex);
+                }
             }
         }
 
@@ -447,6 +470,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                 if (disposing)
                 {
                     Stop();
+                    cancellationTokenSource?.Dispose();
                     messageQueue?.Dispose();
                 }
                 disposed = true;

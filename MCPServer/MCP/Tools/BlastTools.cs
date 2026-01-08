@@ -2,21 +2,19 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
     using RTCV.CorruptCore;
-    using RTCV.NetCore;
-
+    using RTCV.Plugins.MCPServer.Helpers;
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
     /// Tool handler for generating corruption blasts.
     /// </summary>
-    public class BlastGenerateHandler : IToolHandler
+    public class BlastGenerateHandler : ToolHandlerBase
     {
-        public string Name => "blast_generate";
-        public string Description => "Generate and execute a corruption blast with current settings";
+        public override string Name => "blast_generate";
+        public override string Description => "Generate and execute a corruption blast with current settings";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -29,141 +27,49 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            bool apply = GetArgument(arguments, "apply", true);
+
+            var blastLayer = RtcvThreadHelper.ExecuteOnFormThread(() => 
+                RtcCore.GenerateBlastLayerOnAllThreads()
+            );
+
+            if (blastLayer == null || blastLayer.Layer.Count == 0)
             {
-                try
-                {
-                    ToolLogger.Log("Generating blast...");
+                return CreateSuccessResult(
+                    "Failed to generate blast - no units generated (check intensity and selected domains)"
+                );
+            }
 
-                    // Parse arguments
-                    bool apply = true;
-                    if (arguments != null && arguments.ContainsKey("apply"))
-                    {
-                        apply = Convert.ToBoolean(arguments["apply"]);
-                    }
+            int unitCount = blastLayer.Layer.Count;
 
-                    BlastLayer blastLayer = null;
-                    Exception error = null;
+            if (apply)
+            {
+                RtcvThreadHelper.ExecuteOnEmuThread(() => 
+                    blastLayer.Apply(true)
+                );
 
-                    // Generate blast on correct thread
-                    SyncObjectSingleton.FormExecute(() =>
-                    {
-                        try
-                        {
-                            blastLayer = RtcCore.GenerateBlastLayerOnAllThreads();
-                        }
-                        catch (Exception ex)
-                        {
-                            error = ex;
-                        }
-                    });
+                return CreateSuccessResult(
+                    $"Generated and applied blast with {unitCount} corruption units"
+                );
+            }
 
-                    if (error != null)
-                    {
-                        throw error;
-                    }
-
-                    if (blastLayer == null || blastLayer.Layer.Count == 0)
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Failed to generate blast - no units generated (check intensity and selected domains)"
-                                }
-                            },
-                            IsError = false
-                        };
-                    }
-
-                    int unitCount = blastLayer.Layer.Count;
-                    ToolLogger.Log($"Generated blast with {unitCount} units");
-
-                    // Apply if requested
-                    if (apply)
-                    {
-                        SyncObjectSingleton.EmuThreadExecute(() =>
-                        {
-                            try
-                            {
-                                blastLayer.Apply(true);
-                            }
-                            catch (Exception ex)
-                            {
-                                error = ex;
-                            }
-                        }, true);
-
-                        if (error != null)
-                        {
-                            throw error;
-                        }
-
-                        ToolLogger.Log($"Applied blast with {unitCount} units");
-
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = $"Generated and applied blast with {unitCount} corruption units"
-                                }
-                            },
-                            IsError = false
-                        };
-                    }
-                    else
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = $"Generated blast with {unitCount} corruption units (not applied)"
-                                }
-                            },
-                            IsError = false
-                        };
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ToolLogger.LogError($"Error generating blast: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error generating blast: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
-                }
-            });
+            return CreateSuccessResult(
+                $"Generated blast with {unitCount} corruption units (not applied)"
+            );
         }
     }
 
     /// <summary>
     /// Tool handler for toggling AutoCorrupt on/off.
     /// </summary>
-    public class BlastToggleHandler : IToolHandler
+    public class BlastToggleHandler : ToolHandlerBase
     {
-        public string Name => "blast_toggle";
-        public string Description => "Toggle automatic corruption (AutoCorrupt) on or off";
+        public override string Name => "blast_toggle";
+        public override string Description => "Toggle automatic corruption (AutoCorrupt) on or off";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -177,93 +83,30 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             Required = new List<string> { "enabled" }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    if (arguments == null || !arguments.ContainsKey("enabled"))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Missing required argument: enabled"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
+            ValidateRequiredArgument(arguments, "enabled");
+            
+            bool enabled = GetArgument<bool>(arguments, "enabled");
 
-                    bool enabled = Convert.ToBoolean(arguments["enabled"]);
-                    Exception error = null;
+            RtcvThreadHelper.ExecuteOnFormThread(() => 
+                RtcCore.AutoCorrupt = enabled
+            );
 
-                    SyncObjectSingleton.FormExecute(() =>
-                    {
-                        try
-                        {
-                            RtcCore.AutoCorrupt = enabled;
-                        }
-                        catch (Exception ex)
-                        {
-                            error = ex;
-                        }
-                    });
-
-                    if (error != null)
-                    {
-                        throw error;
-                    }
-
-                    string status = enabled ? "enabled" : "disabled";
-                    ToolLogger.Log($"AutoCorrupt {status}");
-
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"AutoCorrupt {status}"
-                            }
-                        },
-                        IsError = false
-                    };
-                }
-                catch (Exception ex)
-                {
-                    ToolLogger.LogError($"Error toggling AutoCorrupt: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error toggling AutoCorrupt: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
-                }
-            });
+            string status = enabled ? "enabled" : "disabled";
+            return CreateSuccessResult($"AutoCorrupt {status}");
         }
     }
 
     /// <summary>
     /// Tool handler for setting blast intensity.
     /// </summary>
-    public class BlastSetIntensityHandler : IToolHandler
+    public class BlastSetIntensityHandler : ToolHandlerBase
     {
-        public string Name => "blast_set_intensity";
-        public string Description => "Set the corruption intensity (blast unit count) and error delay";
+        public override string Name => "blast_set_intensity";
+        public override string Description => "Set the corruption intensity (blast unit count) and error delay";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -282,128 +125,43 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             Required = new List<string> { "intensity" }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            ValidateRequiredArgument(arguments, "intensity");
+            
+            long intensity = Convert.ToInt64(arguments["intensity"]);
+
+            if (intensity < 1 || intensity > 100000)
             {
-                try
+                return CreateErrorResult("Intensity must be between 1 and 100000");
+            }
+
+            long? errorDelay = null;
+            if (arguments.ContainsKey("error_delay"))
+            {
+                errorDelay = Convert.ToInt64(arguments["error_delay"]);
+                if (errorDelay < 10 || errorDelay > 10000)
                 {
-                    if (arguments == null || !arguments.ContainsKey("intensity"))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Missing required argument: intensity"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    long intensity = Convert.ToInt64(arguments["intensity"]);
-
-                    if (intensity < 1 || intensity > 100000)
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Intensity must be between 1 and 100000"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    long? errorDelay = null;
-                    if (arguments.ContainsKey("error_delay"))
-                    {
-                        errorDelay = Convert.ToInt64(arguments["error_delay"]);
-                        if (errorDelay < 10 || errorDelay > 10000)
-                        {
-                            return new ToolCallResult
-                            {
-                                Content = new List<ToolContent>
-                                {
-                                    new ToolContent
-                                    {
-                                        Type = "text",
-                                        Text = "Error delay must be between 10 and 10000 milliseconds"
-                                    }
-                                },
-                                IsError = true
-                            };
-                        }
-                    }
-
-                    Exception error = null;
-
-                    SyncObjectSingleton.FormExecute(() =>
-                    {
-                        try
-                        {
-                            RtcCore.Intensity = intensity;
-                            if (errorDelay.HasValue)
-                            {
-                                RtcCore.ErrorDelay = errorDelay.Value;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            error = ex;
-                        }
-                    });
-
-                    if (error != null)
-                    {
-                        throw error;
-                    }
-
-                    ToolLogger.Log($"Set intensity to {intensity}" + (errorDelay.HasValue ? $", error delay to {errorDelay}ms" : ""));
-
-                    string message = $"Set intensity to {intensity}";
-                    if (errorDelay.HasValue)
-                    {
-                        message += $" and error delay to {errorDelay}ms";
-                    }
-
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = message
-                            }
-                        },
-                        IsError = false
-                    };
+                    return CreateErrorResult("Error delay must be between 10 and 10000 milliseconds");
                 }
-                catch (Exception ex)
+            }
+
+            RtcvThreadHelper.ExecuteOnFormThread(() =>
+            {
+                RtcCore.Intensity = intensity;
+                if (errorDelay.HasValue)
                 {
-                    ToolLogger.LogError($"Error setting intensity: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error setting intensity: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
+                    RtcCore.ErrorDelay = errorDelay.Value;
                 }
             });
+
+            string message = $"Set intensity to {intensity}";
+            if (errorDelay.HasValue)
+            {
+                message += $" and error delay to {errorDelay}ms";
+            }
+
+            return CreateSuccessResult(message);
         }
     }
 }
