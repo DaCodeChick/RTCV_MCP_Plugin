@@ -28,10 +28,9 @@
     <ProjectReference Include="..\..\RTCV\Source\Libraries\PluginHost\PluginHost.csproj">
       <Private>False</Private>
     </ProjectReference>
-    <!-- UI reference temporarily commented out due to build issue - will add back when needed for UI phase -->
-    <!--<ProjectReference Include="..\..\RTCV\Source\Frontend\UI\UI.csproj">
+    <ProjectReference Include="..\..\RTCV\Source\Frontend\UI\UI.csproj">
       <Private>False</Private>
-    </ProjectReference>-->
+    </ProjectReference>
   </ItemGroup>
   
   <!-- NuGet Packages -->
