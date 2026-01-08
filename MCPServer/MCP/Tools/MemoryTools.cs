@@ -6,7 +6,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
-    using RTCV.Plugins.MCPServer.Logging;
+    
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
@@ -53,9 +53,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Missing required arguments: domain, address, length"
@@ -73,9 +73,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Length must be between 1 and 1024 bytes"
@@ -85,7 +85,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                         };
                     }
 
-                    Logger.Log($"Reading {length} bytes from {domainName}:0x{address:X}", LogLevel.Verbose);
+                    ToolLogger.Log($"Reading {length} bytes from {domainName}:0x{address:X}");
 
                     byte[] data = null;
                     Exception error = null;
@@ -139,9 +139,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = result
@@ -152,12 +152,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error reading memory: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error reading memory: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error reading memory: {ex.Message}"
@@ -218,9 +218,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Missing required arguments: domain, address, data"
@@ -238,9 +238,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Data must be an array of numbers"
@@ -256,9 +256,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Data length must be between 1 and 1024 bytes"
@@ -268,7 +268,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                         };
                     }
 
-                    Logger.Log($"Writing {data.Length} bytes to {domainName}:0x{address:X}", LogLevel.Normal);
+                    ToolLogger.Log($"Writing {data.Length} bytes to {domainName}:0x{address:X}");
 
                     Exception error = null;
 
@@ -293,7 +293,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                                 throw new ArgumentException($"Memory domain '{domainName}' not found");
                             }
 
-                            if (!domain.Writable)
+                            if (domain.ReadOnly)
                             {
                                 throw new InvalidOperationException($"Memory domain '{domainName}' is not writable");
                             }
@@ -322,13 +322,13 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     string hexString = BitConverter.ToString(data).Replace("-", " ");
                     string result = $"Wrote {data.Length} bytes to {domainName}:0x{address:X}\n\nHex: {hexString}";
 
-                    Logger.Log($"Successfully wrote {data.Length} bytes", LogLevel.Normal);
+                    ToolLogger.Log($"Successfully wrote {data.Length} bytes");
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = result
@@ -339,12 +339,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error writing memory: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error writing memory: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error writing memory: {ex.Message}"

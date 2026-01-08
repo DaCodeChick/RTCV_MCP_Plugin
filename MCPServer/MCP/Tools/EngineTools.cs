@@ -6,7 +6,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
-    using RTCV.Plugins.MCPServer.Logging;
+    
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
@@ -29,7 +29,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             {
                 try
                 {
-                    Logger.Log("Getting engine configuration...", LogLevel.Verbose);
+                    ToolLogger.Log("Getting engine configuration...");
 
                     StringBuilder config = new StringBuilder();
                     Exception error = null;
@@ -81,9 +81,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = config.ToString()
@@ -94,12 +94,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error getting engine config: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error getting engine config: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error getting engine config: {ex.Message}"
@@ -154,9 +154,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "At least one parameter is required (engine, precision, or alignment)"
@@ -182,7 +182,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                                 {
                                     RtcCore.SelectedEngine = engine;
                                     changes.Add($"Engine set to {engine}");
-                                    Logger.Log($"Engine set to {engine}", LogLevel.Normal);
+                                    ToolLogger.Log($"Engine set to {engine}");
                                 }
                                 else
                                 {
@@ -202,7 +202,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                                 RtcCore.CurrentPrecision = precision;
                                 changes.Add($"Precision set to {precision} byte(s)");
-                                Logger.Log($"Precision set to {precision}", LogLevel.Normal);
+                                ToolLogger.Log($"Precision set to {precision}");
                             }
 
                             // Set alignment if provided
@@ -219,14 +219,14 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                                 {
                                     RtcCore.UseAlignment = false;
                                     changes.Add("Alignment disabled");
-                                    Logger.Log("Alignment disabled", LogLevel.Normal);
+                                    ToolLogger.Log("Alignment disabled");
                                 }
                                 else
                                 {
                                     RtcCore.UseAlignment = true;
                                     RtcCore.Alignment = alignment;
                                     changes.Add($"Alignment set to {alignment}");
-                                    Logger.Log($"Alignment set to {alignment}", LogLevel.Normal);
+                                    ToolLogger.Log($"Alignment set to {alignment}");
                                 }
                             }
                         }
@@ -245,9 +245,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "No changes made"
@@ -259,9 +259,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = "Configuration updated:\n" + string.Join("\n", changes)
@@ -272,12 +272,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error setting engine config: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error setting engine config: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error setting engine config: {ex.Message}"

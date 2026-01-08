@@ -5,7 +5,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
-    using RTCV.Plugins.MCPServer.Logging;
+    
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
@@ -35,7 +35,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             {
                 try
                 {
-                    Logger.Log("Creating savestate...", LogLevel.Normal);
+                    ToolLogger.Log("Creating savestate...");
 
                     string name = null;
                     if (arguments != null && arguments.ContainsKey("name"))
@@ -87,9 +87,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Failed to create savestate"
@@ -100,13 +100,13 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     }
 
                     string displayName = stashKey.Alias ?? stashKey.Key;
-                    Logger.Log($"Created savestate: {displayName}", LogLevel.Normal);
+                    ToolLogger.Log($"Created savestate: {displayName}");
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Created savestate: {displayName}\nKey: {stashKey.Key}\nGame: {stashKey.GameName}\nSystem: {stashKey.SystemName}"
@@ -117,12 +117,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error creating savestate: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error creating savestate: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error creating savestate: {ex.Message}"
@@ -168,9 +168,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Missing required argument: key"
@@ -186,9 +186,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Invalid key provided"
@@ -198,15 +198,15 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                         };
                     }
 
-                    Logger.Log($"Loading savestate with key: {key}", LogLevel.Normal);
+                    ToolLogger.Log($"Loading savestate with key: {key}");
 
                     // Note: Full implementation would require accessing the stockpile to find the StashKey by key
                     // This is a placeholder that explains the limitation
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = "Savestate loading is not fully implemented in this version. " +
@@ -219,12 +219,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error loading savestate: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error loading savestate: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error loading savestate: {ex.Message}"

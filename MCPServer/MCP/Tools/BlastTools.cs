@@ -69,9 +69,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Failed to generate blast - no units generated (check intensity and selected domains)"
@@ -108,9 +108,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = $"Generated and applied blast with {unitCount} corruption units"
@@ -123,9 +123,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = $"Generated blast with {unitCount} corruption units (not applied)"
@@ -140,9 +140,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     ToolLogger.LogError($"Error generating blast: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error generating blast: {ex.Message}"
@@ -187,9 +187,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Missing required argument: enabled"
@@ -224,9 +224,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"AutoCorrupt {status}"
@@ -240,9 +240,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     ToolLogger.LogError($"Error toggling AutoCorrupt: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error toggling AutoCorrupt: {ex.Message}"
@@ -292,9 +292,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Missing required argument: intensity"
@@ -310,9 +310,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Intensity must be between 1 and 100000"
@@ -330,9 +330,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                         {
                             return new ToolCallResult
                             {
-                                Content = new List<ContentBlock>
+                                Content = new List<ToolContent>
                                 {
-                                    new ContentBlock
+                                    new ToolContent
                                     {
                                         Type = "text",
                                         Text = "Error delay must be between 10 and 10000 milliseconds"
@@ -376,9 +376,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = message
@@ -392,9 +392,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     ToolLogger.LogError($"Error setting intensity: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error setting intensity: {ex.Message}"

@@ -7,7 +7,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
-    using RTCV.Plugins.MCPServer.Logging;
+    
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             {
                 try
                 {
-                    Logger.Log("Getting RTCV status...", LogLevel.Verbose);
+                    ToolLogger.Log("Getting RTCV status...");
 
                     StringBuilder status = new StringBuilder();
                     Exception error = null;
@@ -102,9 +102,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = status.ToString()
@@ -115,12 +115,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error getting status: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error getting status: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error getting status: {ex.Message}"
@@ -153,7 +153,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             {
                 try
                 {
-                    Logger.Log("Listing memory domains...", LogLevel.Verbose);
+                    ToolLogger.Log("Listing memory domains...");
 
                     StringBuilder result = new StringBuilder();
                     Exception error = null;
@@ -201,7 +201,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                                         result.AppendLine($"  - Size: {domain.Size:N0} bytes ({FormatBytes(domain.Size)})");
                                         result.AppendLine($"  - Word Size: {domain.WordSize} bytes");
                                         result.AppendLine($"  - Endian: {(domain.BigEndian ? "Big" : "Little")}");
-                                        result.AppendLine($"  - Writable: {(domain.Writable ? "Yes" : "No")}");
+                                        result.AppendLine($"  - Writable: {(!domain.ReadOnly ? "Yes" : "No")}");
                                         result.AppendLine();
                                     }
 
@@ -226,9 +226,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = result.ToString()
@@ -239,12 +239,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error listing memory domains: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error listing memory domains: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error listing memory domains: {ex.Message}"

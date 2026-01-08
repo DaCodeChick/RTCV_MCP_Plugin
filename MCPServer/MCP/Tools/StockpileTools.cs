@@ -5,7 +5,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
-    using RTCV.Plugins.MCPServer.Logging;
+    
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
@@ -28,7 +28,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             {
                 try
                 {
-                    Logger.Log("Adding current state to stockpile...", LogLevel.Normal);
+                    ToolLogger.Log("Adding current state to stockpile...");
 
                     bool added = false;
                     Exception error = null;
@@ -54,9 +54,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "No corruption applied - nothing to add to stockpile"
@@ -66,13 +66,13 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                         };
                     }
 
-                    Logger.Log("Added current state to stockpile", LogLevel.Normal);
+                    ToolLogger.Log("Added current state to stockpile");
 
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = "Successfully added current corruption state to stockpile"
@@ -83,12 +83,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error adding to stockpile: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error adding to stockpile: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error adding to stockpile: {ex.Message}"
@@ -134,9 +134,9 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                     {
                         return new ToolCallResult
                         {
-                            Content = new List<ContentBlock>
+                            Content = new List<ToolContent>
                             {
-                                new ContentBlock
+                                new ToolContent
                                 {
                                     Type = "text",
                                     Text = "Missing required argument: index"
@@ -148,15 +148,15 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 
                     int index = Convert.ToInt32(arguments["index"]);
 
-                    Logger.Log($"Attempting to apply stockpile item at index {index}", LogLevel.Normal);
+                    ToolLogger.Log($"Attempting to apply stockpile item at index {index}");
 
                     // Note: Full implementation would require iterating through StashHistory and applying the specific item
                     // This is a placeholder
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = "Stockpile apply is not fully implemented in this version. " +
@@ -169,12 +169,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"Error applying from stockpile: {ex.Message}", LogLevel.Minimal);
+                    ToolLogger.LogError($"Error applying from stockpile: {ex.Message}");
                     return new ToolCallResult
                     {
-                        Content = new List<ContentBlock>
+                        Content = new List<ToolContent>
                         {
-                            new ContentBlock
+                            new ToolContent
                             {
                                 Type = "text",
                                 Text = $"Error applying from stockpile: {ex.Message}"
