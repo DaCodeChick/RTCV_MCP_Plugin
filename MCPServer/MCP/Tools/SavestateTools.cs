@@ -2,21 +2,20 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
-    
+    using RTCV.Plugins.MCPServer.Helpers;
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
     /// Tool handler for creating savestates.
     /// </summary>
-    public class SavestateCreateHandler : IToolHandler
+    public class SavestateCreateHandler : ToolHandlerBase
     {
-        public string Name => "savestate_create";
-        public string Description => "Create a savestate with current emulator state and corruption";
+        public override string Name => "savestate_create";
+        public override string Description => "Create a savestate with current emulator state and corruption";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -29,109 +28,49 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            string name = GetArgument<string>(arguments, "name", null);
+
+            var stashKey = RtcvThreadHelper.ExecuteOnFormThread(() =>
             {
-                try
+                // Check if savestates are supported
+                if (AllSpec.VanguardSpec == null)
                 {
-                    ToolLogger.Log("Creating savestate...");
-
-                    string name = null;
-                    if (arguments != null && arguments.ContainsKey("name"))
-                    {
-                        name = arguments["name"]?.ToString();
-                    }
-
-                    StashKey stashKey = null;
-                    Exception error = null;
-
-                    SyncObjectSingleton.FormExecute(() =>
-                    {
-                        try
-                        {
-                            // Check if savestates are supported
-                            if (AllSpec.VanguardSpec == null)
-                            {
-                                throw new InvalidOperationException("No emulator connected");
-                            }
-
-                            bool supportsSavestates = (bool?)AllSpec.VanguardSpec[VSPEC.SUPPORTS_SAVESTATES] ?? false;
-
-                            if (!supportsSavestates)
-                            {
-                                throw new NotSupportedException("Current emulator does not support savestates");
-                            }
-
-                            // Create savestate
-                            stashKey = StockpileManagerUISide.SaveState();
-
-                            // Set custom alias if provided
-                            if (!string.IsNullOrWhiteSpace(name))
-                            {
-                                stashKey.Alias = name;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            error = ex;
-                        }
-                    });
-
-                    if (error != null)
-                    {
-                        throw error;
-                    }
-
-                    if (stashKey == null)
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Failed to create savestate"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    string displayName = stashKey.Alias ?? stashKey.Key;
-                    ToolLogger.Log($"Created savestate: {displayName}");
-
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Created savestate: {displayName}\nKey: {stashKey.Key}\nGame: {stashKey.GameName}\nSystem: {stashKey.SystemName}"
-                            }
-                        },
-                        IsError = false
-                    };
+                    throw new InvalidOperationException("No emulator connected");
                 }
-                catch (Exception ex)
+
+                bool supportsSavestates = (bool?)AllSpec.VanguardSpec[VSPEC.SUPPORTS_SAVESTATES] ?? false;
+
+                if (!supportsSavestates)
                 {
-                    ToolLogger.LogError($"Error creating savestate: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error creating savestate: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
+                    throw new NotSupportedException("Current emulator does not support savestates");
                 }
+
+                // Create savestate
+                var key = StockpileManagerUISide.SaveState();
+
+                // Set custom alias if provided
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    key.Alias = name;
+                }
+
+                return key;
             });
+
+            if (stashKey == null)
+            {
+                return CreateErrorResult("Failed to create savestate");
+            }
+
+            string displayName = stashKey.Alias ?? stashKey.Key;
+            return CreateSuccessResult(
+                $"Created savestate: {displayName}\n" +
+                $"Key: {stashKey.Key}\n" +
+                $"Game: {stashKey.GameName}\n" +
+                $"System: {stashKey.SystemName}"
+            );
         }
     }
 
@@ -139,12 +78,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     /// Tool handler for loading savestates.
     /// Note: This is a simplified implementation. Full stockpile management would require more complex logic.
     /// </summary>
-    public class SavestateLoadHandler : IToolHandler
+    public class SavestateLoadHandler : ToolHandlerBase
     {
-        public string Name => "savestate_load";
-        public string Description => "Load a previously saved savestate by key (note: limited functionality in current implementation)";
+        public override string Name => "savestate_load";
+        public override string Description => "Load a previously saved savestate by key (note: limited functionality in current implementation)";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -158,82 +97,24 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             Required = new List<string> { "key" }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            ValidateRequiredArgument(arguments, "key");
+            
+            string key = GetArgument<string>(arguments, "key");
+
+            if (string.IsNullOrWhiteSpace(key))
             {
-                try
-                {
-                    if (arguments == null || !arguments.ContainsKey("key"))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Missing required argument: key"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
+                return CreateErrorResult("Invalid key provided");
+            }
 
-                    string key = arguments["key"]?.ToString();
-
-                    if (string.IsNullOrWhiteSpace(key))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Invalid key provided"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    ToolLogger.Log($"Loading savestate with key: {key}");
-
-                    // Note: Full implementation would require accessing the stockpile to find the StashKey by key
-                    // This is a placeholder that explains the limitation
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = "Savestate loading is not fully implemented in this version. " +
-                                       "To load savestates, please use the RTCV UI or add StashKeys to the stockpile first. " +
-                                       "Full stockpile integration is planned for a future release."
-                            }
-                        },
-                        IsError = false
-                    };
-                }
-                catch (Exception ex)
-                {
-                    ToolLogger.LogError($"Error loading savestate: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error loading savestate: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
-                }
-            });
+            // Note: Full implementation would require accessing the stockpile to find the StashKey by key
+            // This is a placeholder that explains the limitation
+            return CreateSuccessResult(
+                "Savestate loading is not fully implemented in this version. " +
+                "To load savestates, please use the RTCV UI or add StashKeys to the stockpile first. " +
+                "Full stockpile integration is planned for a future release."
+            );
         }
     }
 }

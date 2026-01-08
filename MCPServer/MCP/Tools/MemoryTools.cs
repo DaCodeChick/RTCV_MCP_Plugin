@@ -3,22 +3,21 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading.Tasks;
     using RTCV.CorruptCore;
     using RTCV.NetCore;
-    
+    using RTCV.Plugins.MCPServer.Helpers;
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
     /// Tool handler for reading memory values.
     /// WARNING: This tool is disabled by default for safety.
     /// </summary>
-    public class MemoryReadHandler : IToolHandler
+    public class MemoryReadHandler : ToolHandlerBase
     {
-        public string Name => "memory_read";
-        public string Description => "Read memory values from a specific domain and address";
+        public override string Name => "memory_read";
+        public override string Description => "Read memory values from a specific domain and address";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -42,131 +41,59 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             Required = new List<string> { "domain", "address", "length" }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            ValidateRequiredArgument(arguments, "domain");
+            ValidateRequiredArgument(arguments, "address");
+            ValidateRequiredArgument(arguments, "length");
+
+            string domainName = GetArgument<string>(arguments, "domain");
+            long address = Convert.ToInt64(arguments["address"]);
+            int length = Convert.ToInt32(arguments["length"]);
+
+            if (length < 1 || length > 1024)
             {
-                try
+                return CreateErrorResult("Length must be between 1 and 1024 bytes");
+            }
+
+            var data = RtcvThreadHelper.ExecuteOnFormThread(() =>
+            {
+                if (AllSpec.VanguardSpec == null)
                 {
-                    if (arguments == null || !arguments.ContainsKey("domain") || 
-                        !arguments.ContainsKey("address") || !arguments.ContainsKey("length"))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Missing required arguments: domain, address, length"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    string domainName = arguments["domain"]?.ToString();
-                    long address = Convert.ToInt64(arguments["address"]);
-                    int length = Convert.ToInt32(arguments["length"]);
-
-                    if (length < 1 || length > 1024)
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Length must be between 1 and 1024 bytes"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    ToolLogger.Log($"Reading {length} bytes from {domainName}:0x{address:X}");
-
-                    byte[] data = null;
-                    Exception error = null;
-
-                    SyncObjectSingleton.FormExecute(() =>
-                    {
-                        try
-                        {
-                            if (AllSpec.VanguardSpec == null)
-                            {
-                                throw new InvalidOperationException("No emulator connected");
-                            }
-
-                            var memoryDomainsObj = AllSpec.VanguardSpec[VSPEC.MEMORYDOMAINS_INTERFACES];
-                            if (memoryDomainsObj == null || !(memoryDomainsObj is MemoryDomainProxy[] domains))
-                            {
-                                throw new InvalidOperationException("No memory domains available");
-                            }
-
-                            var domain = domains.FirstOrDefault(d => d.Name == domainName);
-                            if (domain == null)
-                            {
-                                throw new ArgumentException($"Memory domain '{domainName}' not found");
-                            }
-
-                            if (address < 0 || address + length > domain.Size)
-                            {
-                                throw new ArgumentOutOfRangeException($"Address range 0x{address:X}-0x{address + length:X} is outside domain bounds (0x0-0x{domain.Size:X})");
-                            }
-
-                            data = new byte[length];
-                            for (int i = 0; i < length; i++)
-                            {
-                                data[i] = domain.PeekByte(address + i);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            error = ex;
-                        }
-                    });
-
-                    if (error != null)
-                    {
-                        throw error;
-                    }
-
-                    // Format output as hex dump
-                    string hexString = BitConverter.ToString(data).Replace("-", " ");
-                    string result = $"Read {length} bytes from {domainName}:0x{address:X}\n\nHex: {hexString}";
-
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = result
-                            }
-                        },
-                        IsError = false
-                    };
+                    throw new InvalidOperationException("No emulator connected");
                 }
-                catch (Exception ex)
+
+                var memoryDomainsObj = AllSpec.VanguardSpec[VSPEC.MEMORYDOMAINS_INTERFACES];
+                if (memoryDomainsObj == null || !(memoryDomainsObj is MemoryDomainProxy[] domains))
                 {
-                    ToolLogger.LogError($"Error reading memory: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error reading memory: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
+                    throw new InvalidOperationException("No memory domains available");
                 }
+
+                var domain = domains.FirstOrDefault(d => d.Name == domainName);
+                if (domain == null)
+                {
+                    throw new ArgumentException($"Memory domain '{domainName}' not found");
+                }
+
+                if (address < 0 || address + length > domain.Size)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        $"Address range 0x{address:X}-0x{address + length:X} is outside domain bounds (0x0-0x{domain.Size:X})"
+                    );
+                }
+
+                byte[] bytes = new byte[length];
+                for (int i = 0; i < length; i++)
+                {
+                    bytes[i] = domain.PeekByte(address + i);
+                }
+
+                return bytes;
             });
+
+            // Format output as hex dump
+            string hexString = BitConverter.ToString(data).Replace("-", " ");
+            return CreateSuccessResult($"Read {length} bytes from {domainName}:0x{address:X}\n\nHex: {hexString}");
         }
     }
 
@@ -174,12 +101,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     /// Tool handler for writing memory values.
     /// WARNING: This tool is disabled by default for safety.
     /// </summary>
-    public class MemoryWriteHandler : IToolHandler
+    public class MemoryWriteHandler : ToolHandlerBase
     {
-        public string Name => "memory_write";
-        public string Description => "Write memory values to a specific domain and address";
+        public override string Name => "memory_write";
+        public override string Description => "Write memory values to a specific domain and address";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -207,153 +134,67 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             Required = new List<string> { "domain", "address", "data" }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            ValidateRequiredArgument(arguments, "domain");
+            ValidateRequiredArgument(arguments, "address");
+            ValidateRequiredArgument(arguments, "data");
+
+            string domainName = GetArgument<string>(arguments, "domain");
+            long address = Convert.ToInt64(arguments["address"]);
+            
+            // Parse data array
+            if (!(arguments["data"] is IEnumerable<object> dataObjects))
             {
-                try
+                return CreateErrorResult("Data must be an array of numbers");
+            }
+
+            byte[] data = dataObjects.Select(o => Convert.ToByte(o)).ToArray();
+
+            if (data.Length < 1 || data.Length > 1024)
+            {
+                return CreateErrorResult("Data length must be between 1 and 1024 bytes");
+            }
+
+            RtcvThreadHelper.ExecuteOnEmuThread(() =>
+            {
+                if (AllSpec.VanguardSpec == null)
                 {
-                    if (arguments == null || !arguments.ContainsKey("domain") || 
-                        !arguments.ContainsKey("address") || !arguments.ContainsKey("data"))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Missing required arguments: domain, address, data"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    string domainName = arguments["domain"]?.ToString();
-                    long address = Convert.ToInt64(arguments["address"]);
-                    
-                    // Parse data array
-                    if (!(arguments["data"] is IEnumerable<object> dataObjects))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Data must be an array of numbers"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    byte[] data = dataObjects.Select(o => Convert.ToByte(o)).ToArray();
-
-                    if (data.Length < 1 || data.Length > 1024)
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Data length must be between 1 and 1024 bytes"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
-
-                    ToolLogger.Log($"Writing {data.Length} bytes to {domainName}:0x{address:X}");
-
-                    Exception error = null;
-
-                    SyncObjectSingleton.EmuThreadExecute(() =>
-                    {
-                        try
-                        {
-                            if (AllSpec.VanguardSpec == null)
-                            {
-                                throw new InvalidOperationException("No emulator connected");
-                            }
-
-                            var memoryDomainsObj = AllSpec.VanguardSpec[VSPEC.MEMORYDOMAINS_INTERFACES];
-                            if (memoryDomainsObj == null || !(memoryDomainsObj is MemoryDomainProxy[] domains))
-                            {
-                                throw new InvalidOperationException("No memory domains available");
-                            }
-
-                            var domain = domains.FirstOrDefault(d => d.Name == domainName);
-                            if (domain == null)
-                            {
-                                throw new ArgumentException($"Memory domain '{domainName}' not found");
-                            }
-
-                            if (domain.ReadOnly)
-                            {
-                                throw new InvalidOperationException($"Memory domain '{domainName}' is not writable");
-                            }
-
-                            if (address < 0 || address + data.Length > domain.Size)
-                            {
-                                throw new ArgumentOutOfRangeException($"Address range 0x{address:X}-0x{address + data.Length:X} is outside domain bounds (0x0-0x{domain.Size:X})");
-                            }
-
-                            for (int i = 0; i < data.Length; i++)
-                            {
-                                domain.PokeByte(address + i, data[i]);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            error = ex;
-                        }
-                    }, true);
-
-                    if (error != null)
-                    {
-                        throw error;
-                    }
-
-                    string hexString = BitConverter.ToString(data).Replace("-", " ");
-                    string result = $"Wrote {data.Length} bytes to {domainName}:0x{address:X}\n\nHex: {hexString}";
-
-                    ToolLogger.Log($"Successfully wrote {data.Length} bytes");
-
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = result
-                            }
-                        },
-                        IsError = false
-                    };
+                    throw new InvalidOperationException("No emulator connected");
                 }
-                catch (Exception ex)
+
+                var memoryDomainsObj = AllSpec.VanguardSpec[VSPEC.MEMORYDOMAINS_INTERFACES];
+                if (memoryDomainsObj == null || !(memoryDomainsObj is MemoryDomainProxy[] domains))
                 {
-                    ToolLogger.LogError($"Error writing memory: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error writing memory: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
+                    throw new InvalidOperationException("No memory domains available");
+                }
+
+                var domain = domains.FirstOrDefault(d => d.Name == domainName);
+                if (domain == null)
+                {
+                    throw new ArgumentException($"Memory domain '{domainName}' not found");
+                }
+
+                if (domain.ReadOnly)
+                {
+                    throw new InvalidOperationException($"Memory domain '{domainName}' is not writable");
+                }
+
+                if (address < 0 || address + data.Length > domain.Size)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        $"Address range 0x{address:X}-0x{address + data.Length:X} is outside domain bounds (0x0-0x{domain.Size:X})"
+                    );
+                }
+
+                for (int i = 0; i < data.Length; i++)
+                {
+                    domain.PokeByte(address + i, data[i]);
                 }
             });
+
+            string hexString = BitConverter.ToString(data).Replace("-", " ");
+            return CreateSuccessResult($"Wrote {data.Length} bytes to {domainName}:0x{address:X}\n\nHex: {hexString}");
         }
     }
 }

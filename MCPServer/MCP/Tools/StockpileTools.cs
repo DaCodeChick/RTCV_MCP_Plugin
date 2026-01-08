@@ -2,102 +2,36 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
     using RTCV.CorruptCore;
-    using RTCV.NetCore;
-    
+    using RTCV.Plugins.MCPServer.Helpers;
     using RTCV.Plugins.MCPServer.MCP.Models;
 
     /// <summary>
     /// Tool handler for adding current state to stockpile history.
     /// </summary>
-    public class StockpileAddHandler : IToolHandler
+    public class StockpileAddHandler : ToolHandlerBase
     {
-        public string Name => "stockpile_add";
-        public string Description => "Add current corruption state to stockpile history/stash";
+        public override string Name => "stockpile_add";
+        public override string Description => "Add current corruption state to stockpile history/stash";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>()
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            bool added = RtcvThreadHelper.ExecuteOnFormThread(() => 
+                StockpileManagerUISide.AddCurrentStashkeyToStash(true)
+            );
+
+            if (!added)
             {
-                try
-                {
-                    ToolLogger.Log("Adding current state to stockpile...");
+                return CreateSuccessResult("No corruption applied - nothing to add to stockpile");
+            }
 
-                    bool added = false;
-                    Exception error = null;
-
-                    SyncObjectSingleton.FormExecute(() =>
-                    {
-                        try
-                        {
-                            added = StockpileManagerUISide.AddCurrentStashkeyToStash(true);
-                        }
-                        catch (Exception ex)
-                        {
-                            error = ex;
-                        }
-                    });
-
-                    if (error != null)
-                    {
-                        throw error;
-                    }
-
-                    if (!added)
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "No corruption applied - nothing to add to stockpile"
-                                }
-                            },
-                            IsError = false
-                        };
-                    }
-
-                    ToolLogger.Log("Added current state to stockpile");
-
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = "Successfully added current corruption state to stockpile"
-                            }
-                        },
-                        IsError = false
-                    };
-                }
-                catch (Exception ex)
-                {
-                    ToolLogger.LogError($"Error adding to stockpile: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error adding to stockpile: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
-                }
-            });
+            return CreateSuccessResult("Successfully added current corruption state to stockpile");
         }
     }
 
@@ -105,12 +39,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     /// Tool handler for applying stored corruption from stockpile.
     /// Note: This is a simplified implementation.
     /// </summary>
-    public class StockpileApplyHandler : IToolHandler
+    public class StockpileApplyHandler : ToolHandlerBase
     {
-        public string Name => "stockpile_apply";
-        public string Description => "Apply corruption from stockpile (note: limited functionality in current implementation)";
+        public override string Name => "stockpile_apply";
+        public override string Description => "Apply corruption from stockpile (note: limited functionality in current implementation)";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -124,66 +58,19 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             Required = new List<string> { "index" }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
-            {
-                try
-                {
-                    if (arguments == null || !arguments.ContainsKey("index"))
-                    {
-                        return new ToolCallResult
-                        {
-                            Content = new List<ToolContent>
-                            {
-                                new ToolContent
-                                {
-                                    Type = "text",
-                                    Text = "Missing required argument: index"
-                                }
-                            },
-                            IsError = true
-                        };
-                    }
+            ValidateRequiredArgument(arguments, "index");
+            
+            int index = GetArgument<int>(arguments, "index");
 
-                    int index = Convert.ToInt32(arguments["index"]);
-
-                    ToolLogger.Log($"Attempting to apply stockpile item at index {index}");
-
-                    // Note: Full implementation would require iterating through StashHistory and applying the specific item
-                    // This is a placeholder
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = "Stockpile apply is not fully implemented in this version. " +
-                                       "To apply stockpile items, please use the RTCV UI. " +
-                                       "Full stockpile integration is planned for a future release."
-                            }
-                        },
-                        IsError = false
-                    };
-                }
-                catch (Exception ex)
-                {
-                    ToolLogger.LogError($"Error applying from stockpile: {ex.Message}");
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error applying from stockpile: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
-                }
-            });
+            // Note: Full implementation would require iterating through StashHistory and applying the specific item
+            // This is a placeholder
+            return CreateSuccessResult(
+                "Stockpile apply is not fully implemented in this version. " +
+                "To apply stockpile items, please use the RTCV UI. " +
+                "Full stockpile integration is planned for a future release."
+            );
         }
     }
 }
