@@ -1,0 +1,105 @@
+{
+  "Version": "1.0",
+  "Server": {
+    "AutoStart": false,
+    "Address": "localhost",
+    "Port": 8080,
+    "EnableHttp": false,
+    "EnableStdio": true,
+    "MaxRequestSizeBytes": 1048576,
+    "ShutdownTimeoutMs": 2000,
+    "MaxFileNameLength": 200
+  },
+  "Logging": {
+    "EnableFileLogging": true,
+    "EnableConsoleLogging": false,
+    "MinimumLevel": "Info",
+    "LogDirectory": "Plugins/MCPServer/Logs"
+  },
+  "Tools": {
+    "blast_generate": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "blast_toggle": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "blast_set_intensity": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "get_status": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "get_emulation_target_info": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "memory_domains_list": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "engine_get_config": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "engine_set_config": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "savestate_create": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "savestate_load": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "stockpile_add": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "stockpile_apply": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "memory_read": {
+      "Enabled": false,
+      "RequireConfirmation": true
+    },
+    "memory_write": {
+      "Enabled": false,
+      "RequireConfirmation": true
+    },
+    "add_memory_region": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "list_memory_regions": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "get_memory_region": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "update_memory_region": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "remove_memory_region": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "read_memory_region": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    },
+    "write_memory_region": {
+      "Enabled": true,
+      "RequireConfirmation": false
+    }
+  }
+}

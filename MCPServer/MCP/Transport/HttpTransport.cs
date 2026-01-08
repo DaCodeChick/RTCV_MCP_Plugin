@@ -14,9 +14,6 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     /// </summary>
     public class HttpTransport : ITransport
     {
-        private const int MAX_REQUEST_SIZE_BYTES = 1024 * 1024; // 1MB - protects against DoS via large requests
-        private static readonly TimeSpan THREAD_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(2);
-
         private HttpListener listener;
         private Thread listenerThread;
         private Thread sseWriterThread;
@@ -26,6 +23,8 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         private readonly string host;
         private readonly int port;
         private readonly string prefix;
+        private readonly int maxRequestSizeBytes;
+        private readonly TimeSpan shutdownTimeout;
         
         // SSE connection management
         private HttpListenerResponse sseResponse;
@@ -54,11 +53,15 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// </summary>
         /// <param name="host">Host to bind to (default: localhost)</param>
         /// <param name="port">Port to listen on (default: 8080)</param>
-        public HttpTransport(string host = "localhost", int port = 8080)
+        /// <param name="maxRequestSizeBytes">Maximum request size in bytes (default: 1MB)</param>
+        /// <param name="shutdownTimeoutMs">Graceful shutdown timeout in milliseconds (default: 2000ms)</param>
+        public HttpTransport(string host = "localhost", int port = 8080, int maxRequestSizeBytes = 1024 * 1024, int shutdownTimeoutMs = 2000)
         {
             this.host = host;
             this.port = port;
             this.prefix = $"http://{host}:{port}/";
+            this.maxRequestSizeBytes = maxRequestSizeBytes;
+            this.shutdownTimeout = TimeSpan.FromMilliseconds(shutdownTimeoutMs);
         }
 
         /// <summary>
@@ -140,12 +143,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                 // Wait for threads to finish gracefully
                 if (listenerThread != null && listenerThread.IsAlive)
                 {
-                    listenerThread.Join(THREAD_SHUTDOWN_TIMEOUT);
+                    listenerThread.Join(shutdownTimeout);
                 }
 
                 if (sseWriterThread != null && sseWriterThread.IsAlive)
                 {
-                    sseWriterThread.Join(THREAD_SHUTDOWN_TIMEOUT);
+                    sseWriterThread.Join(shutdownTimeout);
                 }
 
                 listener?.Close();
@@ -336,10 +339,10 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
             try
             {
                 // Check request size to prevent DoS attacks
-                if (context.Request.ContentLength64 > MAX_REQUEST_SIZE_BYTES)
+                if (context.Request.ContentLength64 > maxRequestSizeBytes)
                 {
                     context.Response.StatusCode = 413; // Payload Too Large
-                    byte[] errorBytes = Encoding.UTF8.GetBytes($"Request too large. Maximum size is {MAX_REQUEST_SIZE_BYTES} bytes.");
+                    byte[] errorBytes = Encoding.UTF8.GetBytes($"Request too large. Maximum size is {maxRequestSizeBytes} bytes.");
                     context.Response.ContentLength64 = errorBytes.Length;
                     context.Response.OutputStream.Write(errorBytes, 0, errorBytes.Length);
                     context.Response.Close();

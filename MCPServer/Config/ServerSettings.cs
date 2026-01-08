@@ -29,5 +29,23 @@ namespace RTCV.Plugins.MCPServer.Config
         /// Enable stdio transport (default)
         /// </summary>
         public bool EnableStdio { get; set; } = true;
+
+        /// <summary>
+        /// Maximum request size in bytes for HTTP transport (protects against DoS attacks)
+        /// Default: 1048576 (1MB)
+        /// </summary>
+        public int MaxRequestSizeBytes { get; set; } = 1024 * 1024;
+
+        /// <summary>
+        /// Timeout in milliseconds for graceful thread shutdown during transport stop
+        /// Default: 2000 (2 seconds)
+        /// </summary>
+        public int ShutdownTimeoutMs { get; set; } = 2000;
+
+        /// <summary>
+        /// Maximum filename length for emulation target display (prevents UI overflow)
+        /// Default: 200 characters
+        /// </summary>
+        public int MaxFileNameLength { get; set; } = 200;
     }
 }

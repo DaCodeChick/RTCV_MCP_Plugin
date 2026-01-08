@@ -68,6 +68,9 @@ namespace RTCV.Plugins.MCPServer.MCP
             string regionsPath = Path.Combine(pluginDir, "..", "..", "Plugins", "MCPServer", "MemoryRegions");
             this.regionManager = new MemoryRegionManager(Path.GetFullPath(regionsPath));
 
+            // Apply config values to static properties
+            EmulationTarget.MaxFileNameLength = config.Server.MaxFileNameLength;
+
             // Register all tool handlers
             RegisterToolHandlers();
 
@@ -137,17 +140,25 @@ namespace RTCV.Plugins.MCPServer.MCP
                 {
                     // Both transports enabled - prioritize HTTP
                     logger.LogWarning("Both HTTP and stdio transports enabled, using HTTP");
-                    transport = new HttpTransport(config.Server.Address, config.Server.Port);
+                    transport = new HttpTransport(
+                        config.Server.Address, 
+                        config.Server.Port,
+                        config.Server.MaxRequestSizeBytes,
+                        config.Server.ShutdownTimeoutMs);
                     logger.LogInfo($"Using HTTP transport on {config.Server.Address}:{config.Server.Port}");
                 }
                 else if (config.Server.EnableHttp)
                 {
-                    transport = new HttpTransport(config.Server.Address, config.Server.Port);
+                    transport = new HttpTransport(
+                        config.Server.Address, 
+                        config.Server.Port,
+                        config.Server.MaxRequestSizeBytes,
+                        config.Server.ShutdownTimeoutMs);
                     logger.LogInfo($"Using HTTP transport on {config.Server.Address}:{config.Server.Port}");
                 }
                 else if (config.Server.EnableStdio)
                 {
-                    transport = new StdioTransport();
+                    transport = new StdioTransport(config.Server.ShutdownTimeoutMs);
                     logger.LogInfo("Using stdio transport");
                 }
                 else

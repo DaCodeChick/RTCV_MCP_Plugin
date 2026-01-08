@@ -11,8 +11,6 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     /// </summary>
     public class StdioTransport : ITransport
     {
-        private static readonly TimeSpan THREAD_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(2);
-
         private Stream stdin;
         private Stream stdout;
         private StreamReader reader;
@@ -20,11 +18,21 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         private Thread readThread;
         private CancellationTokenSource cancellation;
         private bool disposed;
+        private readonly TimeSpan shutdownTimeout;
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
         public event EventHandler<TransportErrorEventArgs> Error;
 
         public bool IsConnected => cancellation != null && !cancellation.IsCancellationRequested && stdin != null && stdout != null;
+
+        /// <summary>
+        /// Initialize stdio transport
+        /// </summary>
+        /// <param name="shutdownTimeoutMs">Graceful shutdown timeout in milliseconds (default: 2000ms)</param>
+        public StdioTransport(int shutdownTimeoutMs = 2000)
+        {
+            this.shutdownTimeout = TimeSpan.FromMilliseconds(shutdownTimeoutMs);
+        }
 
         /// <summary>
         /// Start the stdio transport
@@ -87,7 +95,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
                 // Wait for read thread to finish (with timeout)
                 if (readThread != null && readThread.IsAlive)
                 {
-                    if (!readThread.Join(THREAD_SHUTDOWN_TIMEOUT))
+                    if (!readThread.Join(shutdownTimeout))
                     {
                         OnError("Read thread did not terminate gracefully within timeout");
                     }
