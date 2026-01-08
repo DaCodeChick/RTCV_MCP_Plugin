@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using RTCV.Plugins.MCPServer.MCP.Models;
 
 namespace RTCV.Plugins.MCPServer.MCP.Tools
@@ -9,20 +8,18 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
     /// <summary>
     /// MCP tool for adding memory region annotations
     /// </summary>
-    public class AddMemoryRegionTool : IToolHandler
+    public class AddMemoryRegionTool : MemoryRegionToolBase
     {
-        private readonly MemoryRegionManager _regionManager;
-
-        public AddMemoryRegionTool(MemoryRegionManager regionManager)
+        public AddMemoryRegionTool(MemoryRegionManager regionManager) 
+            : base(regionManager)
         {
-            _regionManager = regionManager;
         }
 
-        public string Name => "add_memory_region";
+        public override string Name => "add_memory_region";
 
-        public string Description => "Annotate a memory region with a semantic description for AI-assisted memory manipulation on the current emulation target";
+        public override string Description => "Annotate a memory region with a semantic description for AI-assisted memory manipulation on the current emulation target";
 
-        public ToolInputSchema InputSchema => new ToolInputSchema
+        public override ToolInputSchema InputSchema => new ToolInputSchema
         {
             Type = "object",
             Properties = new Dictionary<string, object>
@@ -67,80 +64,45 @@ namespace RTCV.Plugins.MCPServer.MCP.Tools
             Required = new List<string> { "description", "domain", "address", "size" }
         };
 
-        public async Task<ToolCallResult> ExecuteAsync(Dictionary<string, object> arguments)
+        protected override ToolCallResult ExecuteCore(Dictionary<string, object> arguments)
         {
-            return await Task.Run(() =>
+            var target = EnsureValidTarget();
+
+            ValidateRequiredArgument(arguments, "description");
+            ValidateRequiredArgument(arguments, "domain");
+            ValidateRequiredArgument(arguments, "address");
+            ValidateRequiredArgument(arguments, "size");
+
+            string description = GetArgument<string>(arguments, "description");
+            string domain = GetArgument<string>(arguments, "domain");
+            long address = Convert.ToInt64(arguments["address"]);
+            long size = Convert.ToInt64(arguments["size"]);
+            string dataType = GetArgument<string>(arguments, "data_type", null);
+            string[] tags = GetTags(arguments);
+            string notes = GetArgument<string>(arguments, "notes", null);
+
+            if (size <= 0)
             {
-                try
-                {
-                    var target = EmulationTarget.GetCurrent();
-                    if (!target.IsValid())
-                    {
-                        throw new InvalidOperationException("No valid emulation target loaded. Please load a game first.");
-                    }
+                return CreateErrorResult("size must be greater than 0");
+            }
 
-                    _regionManager.LoadRegions(target);
+            // Add the region
+            var region = RegionManager.AddRegion(target, description, domain, address, size, 
+                dataType, tags, notes);
 
-                    string description = arguments.ContainsKey("description") ? arguments["description"]?.ToString() : null;
-                    string domain = arguments.ContainsKey("domain") ? arguments["domain"]?.ToString() : null;
-                    long address = arguments.ContainsKey("address") ? Convert.ToInt64(arguments["address"]) : 0;
-                    long size = arguments.ContainsKey("size") ? Convert.ToInt64(arguments["size"]) : 0;
-                    string dataType = arguments.ContainsKey("data_type") ? arguments["data_type"]?.ToString() : null;
-                    string[] tags = arguments.ContainsKey("tags") && arguments["tags"] is object[] arr ? arr.Select(t => t?.ToString()).ToArray() : null;
-                    string notes = arguments.ContainsKey("notes") ? arguments["notes"]?.ToString() : null;
+            string resultText = $"Memory region added successfully for {target.DisplayName}\n" +
+                               $"ID: {region.Id}\n" +
+                               $"Description: {description}\n" +
+                               $"Domain: {region.Domain}\n" +
+                               $"Address: 0x{region.Address:X}\n" +
+                               $"Size: {region.Size} bytes";
 
-                    if (string.IsNullOrEmpty(description))
-                        throw new ArgumentException("description is required");
-                    if (string.IsNullOrEmpty(domain))
-                        throw new ArgumentException("domain is required");
-                    if (size <= 0)
-                        throw new ArgumentException("size must be greater than 0");
+            if (tags != null && tags.Length > 0)
+            {
+                resultText += $"\nTags: {string.Join(", ", tags)}";
+            }
 
-                    // Add the region
-                    var region = _regionManager.AddRegion(target, description, domain, address, size, 
-                        dataType, tags, notes);
-
-                    string resultText = $"Memory region added successfully for {target.DisplayName}\n" +
-                                       $"ID: {region.Id}\n" +
-                                       $"Description: {description}\n" +
-                                       $"Domain: {region.Domain}\n" +
-                                       $"Address: 0x{region.Address:X}\n" +
-                                       $"Size: {region.Size} bytes";
-
-                    if (tags != null && tags.Length > 0)
-                    {
-                        resultText += $"\nTags: {string.Join(", ", tags)}";
-                    }
-
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = resultText
-                            }
-                        },
-                        IsError = false
-                    };
-                }
-                catch (Exception ex)
-                {
-                    return new ToolCallResult
-                    {
-                        Content = new List<ToolContent>
-                        {
-                            new ToolContent
-                            {
-                                Type = "text",
-                                Text = $"Error adding memory region: {ex.Message}"
-                            }
-                        },
-                        IsError = true
-                    };
-                }
-            });
+            return CreateSuccessResult(resultText);
         }
     }
 }
