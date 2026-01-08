@@ -12,13 +12,12 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     /// - POST /message: Client sends JSON-RPC requests
     /// - GET /sse: Server sends responses via Server-Sent Events
     /// </summary>
-    public class HttpTransport : ITransport
+    public class HttpTransport : TransportBase
     {
         private HttpListener listener;
         private Thread listenerThread;
         private Thread sseWriterThread;
         private CancellationTokenSource cancellationTokenSource;
-        private bool disposed;
         
         private readonly string host;
         private readonly int port;
@@ -34,10 +33,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         // Message queue for SSE
         private readonly BlockingCollection<string> messageQueue = new BlockingCollection<string>();
 
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
-        public event EventHandler<TransportErrorEventArgs> Error;
-
-        public bool IsConnected 
+        public override bool IsConnected 
         { 
             get 
             { 
@@ -67,7 +63,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// <summary>
         /// Start the HTTP transport
         /// </summary>
-        public void Start()
+        public override void Start()
         {
             if (cancellationTokenSource != null && !cancellationTokenSource.IsCancellationRequested)
             {
@@ -110,7 +106,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// <summary>
         /// Stop the HTTP transport
         /// </summary>
-        public void Stop()
+        public override void Stop()
         {
             if (cancellationTokenSource == null || cancellationTokenSource.IsCancellationRequested)
             {
@@ -164,7 +160,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// Send a message via SSE
         /// </summary>
         /// <param name="message">JSON-RPC message to send</param>
-        public void SendMessage(string message)
+        public override void SendMessage(string message)
         {
             if (!IsConnected)
             {
@@ -442,62 +438,16 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         }
 
         /// <summary>
-        /// Raise MessageReceived event
+        /// Dispose of HTTP-specific resources
         /// </summary>
-        private void OnMessageReceived(string message)
+        protected override void Dispose(bool disposing)
         {
-            try
+            if (disposing)
             {
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
+                cancellationTokenSource?.Dispose();
+                messageQueue?.Dispose();
             }
-            catch (Exception ex)
-            {
-                OnError("Error in MessageReceived handler", ex);
-            }
-        }
-
-        /// <summary>
-        /// Raise Error event
-        /// NOTE: This is for transport-level errors, not logging
-        /// </summary>
-        private void OnError(string message, Exception exception = null)
-        {
-            try
-            {
-                Error?.Invoke(this, new TransportErrorEventArgs(message, exception));
-            }
-            catch
-            {
-                // Silently fail - we can't do anything if error handler fails
-            }
-        }
-
-        /// <summary>
-        /// Dispose of resources
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    Stop();
-                    cancellationTokenSource?.Dispose();
-                    messageQueue?.Dispose();
-                }
-                disposed = true;
-            }
-        }
-
-        ~HttpTransport()
-        {
-            Dispose(false);
+            base.Dispose(disposing);
         }
     }
 }

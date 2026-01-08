@@ -68,9 +68,14 @@ namespace RTCV.Plugins.MCPServer
             cmbLogLevel.SelectedIndex = (int)config.Logging.Level;
             txtLogPath.Text = config.Logging.Path;
 
-            // Tool settings
-            chkMemoryReadEnabled.Checked = config.Tools.ContainsKey("memory_read") && config.Tools["memory_read"].Enabled;
-            chkMemoryWriteEnabled.Checked = config.Tools.ContainsKey("memory_write") && config.Tools["memory_write"].Enabled;
+            // Tool settings - populate CheckedListBox with all tools
+            lstTools.Items.Clear();
+            var sortedTools = new System.Collections.Generic.SortedDictionary<string, ToolConfig>(config.Tools);
+            foreach (var tool in sortedTools)
+            {
+                // Add tool to list and set its checked state
+                lstTools.Items.Add(tool.Key, tool.Value.Enabled);
+            }
         }
 
         /// <summary>
@@ -99,14 +104,16 @@ namespace RTCV.Plugins.MCPServer
             config.Logging.Level = (LogLevel)cmbLogLevel.SelectedIndex;
             config.Logging.Path = txtLogPath.Text;
 
-            // Tool settings
-            if (config.Tools.ContainsKey("memory_read"))
+            // Tool settings - save all tool states from CheckedListBox
+            for (int i = 0; i < lstTools.Items.Count; i++)
             {
-                config.Tools["memory_read"].Enabled = chkMemoryReadEnabled.Checked;
-            }
-            if (config.Tools.ContainsKey("memory_write"))
-            {
-                config.Tools["memory_write"].Enabled = chkMemoryWriteEnabled.Checked;
+                string toolName = lstTools.Items[i].ToString();
+                bool isEnabled = lstTools.GetItemChecked(i);
+                
+                if (config.Tools.ContainsKey(toolName))
+                {
+                    config.Tools[toolName].Enabled = isEnabled;
+                }
             }
 
             configManager.SaveConfig(config);

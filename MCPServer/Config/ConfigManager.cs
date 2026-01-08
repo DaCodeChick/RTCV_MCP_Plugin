@@ -143,10 +143,79 @@ namespace RTCV.Plugins.MCPServer.Config
                 config.Server = new ServerSettings();
             }
 
+            // Validate Server settings
+            ValidateServerSettings(config.Server);
+
             // Ensure Logging settings exist
             if (config.Logging == null)
             {
                 config.Logging = new Logging.LoggingSettings();
+            }
+        }
+
+        /// <summary>
+        /// Validate and fix server settings to ensure they are within acceptable ranges
+        /// </summary>
+        /// <param name="settings">Server settings to validate</param>
+        private void ValidateServerSettings(ServerSettings settings)
+        {
+            bool hasWarnings = false;
+
+            // Validate MaxRequestSizeBytes (must be > 0, warn if < 1KB or > 100MB)
+            if (settings.MaxRequestSizeBytes <= 0)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] Invalid MaxRequestSizeBytes ({settings.MaxRequestSizeBytes}), using default (1MB)");
+                settings.MaxRequestSizeBytes = 1024 * 1024;
+                hasWarnings = true;
+            }
+            else if (settings.MaxRequestSizeBytes < 1024)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] MaxRequestSizeBytes is very small ({settings.MaxRequestSizeBytes} bytes), consider using at least 1KB");
+                hasWarnings = true;
+            }
+            else if (settings.MaxRequestSizeBytes > 100 * 1024 * 1024)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] MaxRequestSizeBytes is very large ({settings.MaxRequestSizeBytes / (1024 * 1024)}MB), consider reducing to prevent DoS attacks");
+                hasWarnings = true;
+            }
+
+            // Validate ShutdownTimeoutMs (must be >= 500, warn if < 1000 or > 30000)
+            if (settings.ShutdownTimeoutMs < 500)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] Invalid ShutdownTimeoutMs ({settings.ShutdownTimeoutMs}), using minimum (500ms)");
+                settings.ShutdownTimeoutMs = 500;
+                hasWarnings = true;
+            }
+            else if (settings.ShutdownTimeoutMs > 30000)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] ShutdownTimeoutMs is very large ({settings.ShutdownTimeoutMs}ms), consider reducing for faster shutdown");
+                hasWarnings = true;
+            }
+
+            // Validate MaxFileNameLength (must be >= 50, warn if < 100 or > 500)
+            if (settings.MaxFileNameLength < 50)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] Invalid MaxFileNameLength ({settings.MaxFileNameLength}), using minimum (50)");
+                settings.MaxFileNameLength = 50;
+                hasWarnings = true;
+            }
+            else if (settings.MaxFileNameLength > 500)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] MaxFileNameLength is very large ({settings.MaxFileNameLength}), consider reducing");
+                hasWarnings = true;
+            }
+
+            // Validate Port (must be 1-65535)
+            if (settings.Port < 1 || settings.Port > 65535)
+            {
+                RTCVLogging.GlobalLogger.Warn($"[MCP Server] Invalid Port ({settings.Port}), using default (3000)");
+                settings.Port = 3000;
+                hasWarnings = true;
+            }
+
+            if (hasWarnings)
+            {
+                RTCVLogging.GlobalLogger.Info("[MCP Server] Configuration validation completed with warnings");
             }
         }
 

@@ -11,10 +11,9 @@
     "MaxFileNameLength": 200
   },
   "Logging": {
-    "EnableFileLogging": true,
-    "EnableConsoleLogging": false,
-    "MinimumLevel": "Info",
-    "LogDirectory": "Plugins/MCPServer/Logs"
+    "Enabled": true,
+    "Path": "Plugins/MCPServer/Logs/mcp.log",
+    "Level": 1
   },
   "Tools": {
     "blast_generate": {
