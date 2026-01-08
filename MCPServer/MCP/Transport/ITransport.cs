@@ -32,6 +32,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
 
     /// <summary>
     /// Interface for MCP transport implementations
+    /// Implementations should typically inherit from TransportBase for common functionality
     /// </summary>
     public interface ITransport : IDisposable
     {

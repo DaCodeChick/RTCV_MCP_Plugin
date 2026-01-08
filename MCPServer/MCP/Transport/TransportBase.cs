@@ -5,14 +5,17 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     /// <summary>
     /// Base class for MCP transport implementations
     /// Provides common functionality for event raising and disposal
+    /// Implements ITransport interface with shared event handling logic
     /// </summary>
     public abstract class TransportBase : ITransport
     {
         private bool disposed;
 
+        // Implement ITransport events
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
         public event EventHandler<TransportErrorEventArgs> Error;
 
+        // Abstract members that derived classes must implement
         public abstract bool IsConnected { get; }
         public abstract void Start();
         public abstract void Stop();
