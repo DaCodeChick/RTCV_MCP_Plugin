@@ -36,6 +36,11 @@ namespace RTCV.Plugins.MCPServer
             this.grpServerSettings = new System.Windows.Forms.GroupBox();
             this.chkAutoStart = new System.Windows.Forms.CheckBox();
             this.chkEnableStdio = new System.Windows.Forms.CheckBox();
+            this.chkEnableHttp = new System.Windows.Forms.CheckBox();
+            this.lblHttpAddress = new System.Windows.Forms.Label();
+            this.txtHttpAddress = new System.Windows.Forms.TextBox();
+            this.lblHttpPort = new System.Windows.Forms.Label();
+            this.numHttpPort = new System.Windows.Forms.NumericUpDown();
             this.grpLogging = new System.Windows.Forms.GroupBox();
             this.chkLoggingEnabled = new System.Windows.Forms.CheckBox();
             this.lblLogLevel = new System.Windows.Forms.Label();
@@ -109,11 +114,16 @@ namespace RTCV.Plugins.MCPServer
             // 
             // grpServerSettings
             // 
+            this.grpServerSettings.Controls.Add(this.numHttpPort);
+            this.grpServerSettings.Controls.Add(this.lblHttpPort);
+            this.grpServerSettings.Controls.Add(this.txtHttpAddress);
+            this.grpServerSettings.Controls.Add(this.lblHttpAddress);
+            this.grpServerSettings.Controls.Add(this.chkEnableHttp);
             this.grpServerSettings.Controls.Add(this.chkAutoStart);
             this.grpServerSettings.Controls.Add(this.chkEnableStdio);
             this.grpServerSettings.Location = new System.Drawing.Point(12, 98);
             this.grpServerSettings.Name = "grpServerSettings";
-            this.grpServerSettings.Size = new System.Drawing.Size(460, 75);
+            this.grpServerSettings.Size = new System.Drawing.Size(460, 150);
             this.grpServerSettings.TabIndex = 1;
             this.grpServerSettings.TabStop = false;
             this.grpServerSettings.Text = "Server Settings";
@@ -135,10 +145,59 @@ namespace RTCV.Plugins.MCPServer
             this.chkEnableStdio.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkEnableStdio.Location = new System.Drawing.Point(15, 48);
             this.chkEnableStdio.Name = "chkEnableStdio";
-            this.chkEnableStdio.Size = new System.Drawing.Size(162, 17);
+            this.chkEnableStdio.Size = new System.Drawing.Size(120, 17);
             this.chkEnableStdio.TabIndex = 1;
-            this.chkEnableStdio.Text = "Enable stdio transport (required)";
+            this.chkEnableStdio.Text = "Enable stdio transport";
             this.chkEnableStdio.UseVisualStyleBackColor = true;
+            // 
+            // chkEnableHttp
+            // 
+            this.chkEnableHttp.AutoSize = true;
+            this.chkEnableHttp.Location = new System.Drawing.Point(15, 71);
+            this.chkEnableHttp.Name = "chkEnableHttp";
+            this.chkEnableHttp.Size = new System.Drawing.Size(120, 17);
+            this.chkEnableHttp.TabIndex = 2;
+            this.chkEnableHttp.Text = "Enable HTTP transport";
+            this.chkEnableHttp.UseVisualStyleBackColor = true;
+            this.chkEnableHttp.CheckedChanged += new System.EventHandler(this.chkEnableHttp_CheckedChanged);
+            // 
+            // lblHttpAddress
+            // 
+            this.lblHttpAddress.AutoSize = true;
+            this.lblHttpAddress.Location = new System.Drawing.Point(35, 98);
+            this.lblHttpAddress.Name = "lblHttpAddress";
+            this.lblHttpAddress.Size = new System.Drawing.Size(48, 13);
+            this.lblHttpAddress.TabIndex = 3;
+            this.lblHttpAddress.Text = "Address:";
+            // 
+            // txtHttpAddress
+            // 
+            this.txtHttpAddress.Enabled = false;
+            this.txtHttpAddress.Location = new System.Drawing.Point(89, 95);
+            this.txtHttpAddress.Name = "txtHttpAddress";
+            this.txtHttpAddress.Size = new System.Drawing.Size(150, 20);
+            this.txtHttpAddress.TabIndex = 4;
+            this.txtHttpAddress.Text = "localhost";
+            // 
+            // lblHttpPort
+            // 
+            this.lblHttpPort.AutoSize = true;
+            this.lblHttpPort.Location = new System.Drawing.Point(260, 98);
+            this.lblHttpPort.Name = "lblHttpPort";
+            this.lblHttpPort.Size = new System.Drawing.Size(29, 13);
+            this.lblHttpPort.TabIndex = 5;
+            this.lblHttpPort.Text = "Port:";
+            // 
+            // numHttpPort
+            // 
+            this.numHttpPort.Enabled = false;
+            this.numHttpPort.Location = new System.Drawing.Point(295, 96);
+            this.numHttpPort.Maximum = new decimal(new int[] { 65535, 0, 0, 0 });
+            this.numHttpPort.Minimum = new decimal(new int[] { 1024, 0, 0, 0 });
+            this.numHttpPort.Name = "numHttpPort";
+            this.numHttpPort.Size = new System.Drawing.Size(80, 20);
+            this.numHttpPort.TabIndex = 6;
+            this.numHttpPort.Value = new decimal(new int[] { 8080, 0, 0, 0 });
             // 
             // grpLogging
             // 
@@ -147,7 +206,7 @@ namespace RTCV.Plugins.MCPServer
             this.grpLogging.Controls.Add(this.cmbLogLevel);
             this.grpLogging.Controls.Add(this.lblLogPath);
             this.grpLogging.Controls.Add(this.txtLogPath);
-            this.grpLogging.Location = new System.Drawing.Point(12, 179);
+            this.grpLogging.Location = new System.Drawing.Point(12, 254);
             this.grpLogging.Name = "grpLogging";
             this.grpLogging.Size = new System.Drawing.Size(460, 105);
             this.grpLogging.TabIndex = 2;
@@ -269,7 +328,7 @@ namespace RTCV.Plugins.MCPServer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(484, 431);
+            this.ClientSize = new System.Drawing.Size(484, 506);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.grpToolSettings);
@@ -305,6 +364,11 @@ namespace RTCV.Plugins.MCPServer
         private System.Windows.Forms.GroupBox grpServerSettings;
         private System.Windows.Forms.CheckBox chkAutoStart;
         private System.Windows.Forms.CheckBox chkEnableStdio;
+        private System.Windows.Forms.CheckBox chkEnableHttp;
+        private System.Windows.Forms.Label lblHttpAddress;
+        private System.Windows.Forms.TextBox txtHttpAddress;
+        private System.Windows.Forms.Label lblHttpPort;
+        private System.Windows.Forms.NumericUpDown numHttpPort;
         private System.Windows.Forms.GroupBox grpLogging;
         private System.Windows.Forms.CheckBox chkLoggingEnabled;
         private System.Windows.Forms.Label lblLogLevel;

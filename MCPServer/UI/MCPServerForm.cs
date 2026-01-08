@@ -50,6 +50,13 @@ namespace RTCV.Plugins.MCPServer
             // Server settings
             chkAutoStart.Checked = config.Server.AutoStart;
             chkEnableStdio.Checked = config.Server.EnableStdio;
+            chkEnableHttp.Checked = config.Server.EnableHttp;
+            txtHttpAddress.Text = config.Server.Address;
+            numHttpPort.Value = config.Server.Port;
+
+            // Enable/disable HTTP controls based on checkbox
+            txtHttpAddress.Enabled = config.Server.EnableHttp;
+            numHttpPort.Enabled = config.Server.EnableHttp;
 
             // Logging settings
             chkLoggingEnabled.Checked = config.Logging.Enabled;
@@ -73,6 +80,9 @@ namespace RTCV.Plugins.MCPServer
             // Server settings
             config.Server.AutoStart = chkAutoStart.Checked;
             config.Server.EnableStdio = chkEnableStdio.Checked;
+            config.Server.EnableHttp = chkEnableHttp.Checked;
+            config.Server.Address = txtHttpAddress.Text;
+            config.Server.Port = (int)numHttpPort.Value;
 
             // Logging settings
             config.Logging.Enabled = chkLoggingEnabled.Checked;
@@ -195,6 +205,13 @@ namespace RTCV.Plugins.MCPServer
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Hide();
+        }
+
+        private void chkEnableHttp_CheckedChanged(object sender, EventArgs e)
+        {
+            // Enable/disable HTTP controls based on checkbox state
+            txtHttpAddress.Enabled = chkEnableHttp.Checked;
+            numHttpPort.Enabled = chkEnableHttp.Checked;
         }
 
         private void MCPServerForm_FormClosing(object sender, FormClosingEventArgs e)

@@ -133,8 +133,20 @@ namespace RTCV.Plugins.MCPServer.MCP
 
             try
             {
-                // Create transport
-                if (config.Server.EnableStdio)
+                // Create transport based on configuration
+                if (config.Server.EnableHttp && config.Server.EnableStdio)
+                {
+                    // Both transports enabled - prioritize HTTP
+                    logger.LogWarning("Both HTTP and stdio transports enabled, using HTTP");
+                    transport = new HttpTransport(config.Server.Address, config.Server.Port);
+                    logger.LogInfo($"Using HTTP transport on {config.Server.Address}:{config.Server.Port}");
+                }
+                else if (config.Server.EnableHttp)
+                {
+                    transport = new HttpTransport(config.Server.Address, config.Server.Port);
+                    logger.LogInfo($"Using HTTP transport on {config.Server.Address}:{config.Server.Port}");
+                }
+                else if (config.Server.EnableStdio)
                 {
                     transport = new StdioTransport();
                     logger.LogInfo("Using stdio transport");

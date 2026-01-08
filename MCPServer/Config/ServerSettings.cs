@@ -11,17 +11,17 @@ namespace RTCV.Plugins.MCPServer.Config
         public bool AutoStart { get; set; } = false;
 
         /// <summary>
-        /// IP address to bind HTTP server to (future use)
+        /// IP address or hostname to bind HTTP server to
         /// </summary>
-        public string Address { get; set; } = "127.0.0.1";
+        public string Address { get; set; } = "localhost";
 
         /// <summary>
-        /// Port for HTTP server (future use)
+        /// Port for HTTP server
         /// </summary>
         public int Port { get; set; } = 8080;
 
         /// <summary>
-        /// Enable HTTP transport (not yet implemented)
+        /// Enable HTTP transport with Server-Sent Events (SSE)
         /// </summary>
         public bool EnableHttp { get; set; } = false;
 
