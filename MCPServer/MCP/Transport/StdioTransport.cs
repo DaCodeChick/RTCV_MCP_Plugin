@@ -9,7 +9,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
     /// CRITICAL: Only JSON-RPC messages should be written to stdout
     /// All logging must go to file or stderr
     /// </summary>
-    public class StdioTransport : TransportBase
+    public class StdioTransport : ITransport
     {
         private Stream stdin;
         private Stream stdout;
@@ -17,9 +17,13 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         private StreamWriter writer;
         private Thread readThread;
         private CancellationTokenSource cancellation;
+        private bool disposed;
         private readonly TimeSpan shutdownTimeout;
 
-        public override bool IsConnected => cancellation != null && !cancellation.IsCancellationRequested && stdin != null && stdout != null;
+        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+        public event EventHandler<TransportErrorEventArgs> Error;
+
+        public bool IsConnected => cancellation != null && !cancellation.IsCancellationRequested && stdin != null && stdout != null;
 
         /// <summary>
         /// Initialize stdio transport
@@ -33,7 +37,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// <summary>
         /// Start the stdio transport
         /// </summary>
-        public override void Start()
+        public void Start()
         {
             if (cancellation != null && !cancellation.IsCancellationRequested)
             {
@@ -76,7 +80,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// <summary>
         /// Stop the stdio transport
         /// </summary>
-        public override void Stop()
+        public void Stop()
         {
             if (cancellation == null || cancellation.IsCancellationRequested)
             {
@@ -120,7 +124,7 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
         /// Send a message to stdout
         /// </summary>
         /// <param name="message">JSON-RPC message to send</param>
-        public override void SendMessage(string message)
+        public void SendMessage(string message)
         {
             if (!IsConnected)
             {
@@ -179,6 +183,62 @@ namespace RTCV.Plugins.MCPServer.MCP.Transport
             {
                 OnError("Error in read loop", ex);
             }
+        }
+
+        /// <summary>
+        /// Raise MessageReceived event
+        /// </summary>
+        private void OnMessageReceived(string message)
+        {
+            try
+            {
+                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
+            }
+            catch (Exception ex)
+            {
+                OnError("Error in MessageReceived handler", ex);
+            }
+        }
+
+        /// <summary>
+        /// Raise Error event
+        /// </summary>
+        private void OnError(string message, Exception exception = null)
+        {
+            try
+            {
+                Error?.Invoke(this, new TransportErrorEventArgs(message, exception));
+            }
+            catch
+            {
+                // Silently fail - we can't do anything if error handler fails
+            }
+        }
+
+        /// <summary>
+        /// Dispose of resources
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    Stop();
+                }
+                disposed = true;
+            }
+        }
+
+        ~StdioTransport()
+        {
+            Dispose(false);
         }
     }
 }
